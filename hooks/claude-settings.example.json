@@ -1,0 +1,25 @@
+{
+  "_comment": "把这一段合并进 ~/.claude/settings.json；路径换成你的桌面目录。Stop 只同步，不跑 agent；SessionStart 只打印到点 prompt。",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$HOME/ComicDesk\" && python3 bin/desk sync >/dev/null 2>&1"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$HOME/ComicDesk\" && python3 bin/desk schedule"
+          }
+        ]
+      }
+    ]
+  }
+}

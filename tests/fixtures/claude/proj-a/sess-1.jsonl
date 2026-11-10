@@ -1,0 +1,4 @@
+{"type":"user","message":{"role":"user","content":[{"type":"text","text":"帮我把今天的桌面索引整理一下"}]},"timestamp":"2026-11-09T09:12:00+08:00","sessionId":"sess-1"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"好，先看 data/links.json。"}]},"timestamp":"2026-11-09T09:12:30+08:00","sessionId":"sess-1"}
+{"type":"user","message":{"role":"user","content":[{"type":"text","text":"再把 notes 里那条旧的删掉"}]},"timestamp":"2026-11-09T10:05:00+08:00","sessionId":"sess-1"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"删了。"}]},"timestamp":"2026-11-09T10:05:40+08:00","sessionId":"sess-1"}

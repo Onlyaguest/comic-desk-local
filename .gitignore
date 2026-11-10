@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+*.zip
+
+# 运行产物
+data/server.log
+data/server.err.log
+data/schedule-state.json
+data/generated/
+
+# 个人层：只保留空目录占位
+app/assets/me/*
+!app/assets/me/.keep
+!app/assets/me/figures/
+app/assets/me/figures/*
+!app/assets/me/figures/.keep
+app/assets/audio/*
+!app/assets/audio/.keep
+data/uploads/*
+!data/uploads/.keep
+data/digest/*
+!data/digest/.keep

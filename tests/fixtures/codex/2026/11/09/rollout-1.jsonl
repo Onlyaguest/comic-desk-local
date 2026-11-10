@@ -1,0 +1,3 @@
+{"timestamp":"2026-11-09T11:00:00+08:00","type":"session_meta","payload":{"id":"cx-1","cwd":"/Users/me/proj"}}
+{"timestamp":"2026-11-09T11:01:00+08:00","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"看看今天的 todo 还差什么"}]}}
+{"timestamp":"2026-11-09T11:01:20+08:00","type":"event_msg","payload":{"type":"agent_message","message":"还差一条 sync。"}}

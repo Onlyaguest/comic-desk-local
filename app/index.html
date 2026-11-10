@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>我的本地工作台</title>
+<meta name="description" content="我的本地工作台：今天的待办、今日契约、索引、本地图片——点一点桌上的东西，它们都指向本机的真实位置。">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f2c14e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8D%B5%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:ital,wght@0,400;0,700;1,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=yz33">
+<link rel="stylesheet" href="css/projector.css?v=pj4">
+<link rel="stylesheet" href="css/projector-chalk.css?v=ck1">
+</head>
+<body>
+
+<div id="grain"></div>
+
+<!-- ============ HUD ============ -->
+<header id="hud">
+  <div class="brand">
+    <b>MY DESK</b><span>我的本地工作台</span>
+  </div>
+  <div class="tools">
+    <a class="tool tool-3d" href="desk3d.html" title="3D 桌面"><span class="ico">3D</span></a>
+    <button class="tool" data-tool="theme" title="配色"><span class="ico">🎨</span></button>
+    <button class="tool" data-tool="dn" title="白天 / 黑夜"><span class="ico">☀</span></button>
+    <button class="tool" data-tool="sound" title="环境音"><span class="ico">♪</span></button>
+    <button class="tool" data-tool="filter" title="漫画滤镜"><span class="ico">◐</span></button>
+    <button class="tool" data-tool="update" title="如何更新"><span class="ico">?</span></button>
+  </div>
+</header>
+
+<!-- ============ STAGE ============ -->
+<div id="viewport">
+<div id="stage" class="night">
+
+  <!-- wall -->
+  <div class="wall"></div>
+  <div class="wall-halftone"></div>
+  <div class="baseboard"></div>
+
+  <!-- ===== WINDOW ===== -->
+  <div class="obj window" data-obj="window" tabindex="0" role="button" aria-label="窗户">
+    <svg class="city" viewBox="0 0 460 620" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs>
+        <pattern id="win" width="15" height="19" patternUnits="userSpaceOnUse">
+          <rect x="3.5" y="4" width="6" height="8" rx="1" class="wlit"/>
+        </pattern>
+        <pattern id="win2" width="11" height="15" patternUnits="userSpaceOnUse">
+          <rect x="2.5" y="3" width="4.5" height="6" rx="1" class="wlit"/>
+        </pattern>
+      </defs>
+      <rect class="sky" x="0" y="0" width="460" height="620"/>
+      <g class="stars">
+        <circle cx="40" cy="60" r="2"/><circle cx="120" cy="34" r="1.5"/><circle cx="210" cy="72" r="2"/>
+        <circle cx="300" cy="40" r="1.5"/><circle cx="360" cy="96" r="2"/><circle cx="420" cy="52" r="1.5"/>
+        <circle cx="70" cy="150" r="1.5"/><circle cx="250" cy="140" r="1.5"/><circle cx="400" cy="170" r="1.5"/>
+      </g>
+      <circle class="moon" cx="360" cy="96" r="40"/>
+      <g class="blds">
+        <rect x="-10" y="360" width="70" height="260" class="bld b1"/>
+        <rect x="52"  y="300" width="58" height="320" class="bld b2"/>
+        <rect x="104" y="410" width="70" height="210" class="bld b3"/>
+        <rect x="168" y="250" width="66" height="370" class="bld b4"/>
+        <rect x="228" y="330" width="54" height="290" class="bld b5"/>
+        <rect x="276" y="210" width="72" height="410" class="bld b1"/>
+        <rect x="342" y="300" width="60" height="320" class="bld b3"/>
+        <rect x="396" y="360" width="72" height="260" class="bld b2"/>
+      </g>
+      <g class="wins">
+        <rect x="-10" y="360" width="70" height="260" fill="url(#win2)"/>
+        <rect x="52"  y="300" width="58" height="320" fill="url(#win)"/>
+        <rect x="104" y="410" width="70" height="210" fill="url(#win2)"/>
+        <rect x="168" y="250" width="66" height="370" fill="url(#win)"/>
+        <rect x="228" y="330" width="54" height="290" fill="url(#win2)"/>
+        <rect x="276" y="210" width="72" height="410" fill="url(#win)"/>
+        <rect x="342" y="300" width="60" height="320" fill="url(#win2)"/>
+        <rect x="396" y="360" width="72" height="260" fill="url(#win)"/>
+      </g>
+      <!-- 群玉阁：浮在璃月港上空的一块岩 -->
+      <g class="jade" transform="translate(118 150)">
+        <path class="jade-rock" d="M-58 18 q58 18 116 0 l-14 22 q-18 34 -40 46 q-14 6 -22 0 q-26 -16 -40 -46 z"/>
+        <path class="jade-rock2" d="M-30 46 q30 10 60 0 l-12 20 q-18 14 -36 0 z"/>
+        <rect class="jade-hall" x="-34" y="-4" width="68" height="22" rx="2"/>
+        <path class="jade-roof" d="M-48 -2 q48 -10 96 0 l-8 -10 q-40 -8 -80 0 z"/>
+        <rect class="jade-hall" x="-18" y="-26" width="36" height="16" rx="2"/>
+        <path class="jade-roof" d="M-30 -24 q30 -8 60 0 l-6 -9 q-24 -6 -48 0 z"/>
+        <path class="jade-spire" d="M0 -46 l4 12 h-8 z"/>
+      </g>
+      <!-- 霄灯：只在夜里升起 -->
+      <g class="lanterns">
+        <g class="lan l1" transform="translate(70 300)"><rect x="-7" y="-10" width="14" height="18" rx="5"/><circle cx="0" cy="0" r="18"/></g>
+        <g class="lan l2" transform="translate(250 340)"><rect x="-6" y="-9" width="12" height="16" rx="5"/><circle cx="0" cy="0" r="16"/></g>
+        <g class="lan l3" transform="translate(330 250)"><rect x="-5" y="-8" width="10" height="14" rx="4"/><circle cx="0" cy="0" r="14"/></g>
+        <g class="lan l4" transform="translate(180 420)"><rect x="-7" y="-10" width="14" height="18" rx="5"/><circle cx="0" cy="0" r="18"/></g>
+        <g class="lan l5" transform="translate(410 380)"><rect x="-5" y="-8" width="10" height="14" rx="4"/><circle cx="0" cy="0" r="14"/></g>
+      </g>
+    </svg>
+    <div class="pane"></div>
+    <div class="glare"></div>
+    <div class="wname">LIYUE HARBOR</div>
+  </div>
+
+  <!-- ===== CORK BOARD ===== -->
+  <div class="obj board" data-obj="board" tabindex="0" role="button" aria-label="软木板">
+    <div class="cork">
+      <div class="pin-note board-title">我的<br><em>工作台</em></div>
+      <div class="polaroid p1"><div class="ph"></div><span></span></div>
+      <div class="polaroid p2"><div class="ph"></div><span></span></div>
+      <div class="polaroid p3"><div class="ph"></div><span></span></div>
+      <div class="tag-chip">AI 共创</div>
+      <div class="tag-chip t2">Cohub</div>
+      <div class="tag-chip t3">岩王帝君</div>
+      <div class="pin red"></div><div class="pin blue"></div><div class="pin green"></div>
+      <div class="arsenal-card"><i class="pin yellow"></i><span class="ac-ico">⚔</span><b>索引</b><small>INDEX · LOCAL</small></div>
+    </div>
+  </div>
+
+  <!-- ===== CLIP STRIP (notes) ===== -->
+  <div class="obj clipstrip" data-obj="notes" tabindex="0" role="button" aria-label="便签墙">
+    <div class="bar"></div>
+    <div class="cards" id="noteCards"></div>
+  </div>
+
+  <!-- ===== POSTER ===== -->
+  <div class="obj poster" data-obj="poster" tabindex="0" role="button" aria-label="海报">
+    <div class="poster-in">
+      <img class="poster-img" id="posterImg" alt="" draggable="false" hidden>
+      <div class="pow">POW!</div>
+      <div class="poster-word">SHOW<br>CASE</div>
+      <div class="poster-sub">MY INDEX · ONE DESK</div>
+      <div class="poster-stamp" id="posterStamp">作品展台</div>
+      <div class="halftone-blob"></div>
+    </div>
+  </div>
+
+  <!-- ===== WALL SHELF (新加的物品) ===== -->
+  <div class="shelf">
+    <div class="plank"></div>
+    <div class="shelf-stuff">
+      <div class="obj camera" data-obj="camera" tabindex="0" role="button" aria-label="相机">
+        <div class="cam-strap"></div>
+        <div class="cam-top"></div><div class="cam-shutter"></div>
+        <div class="cam-body"><div class="cam-stripe"></div><div class="cam-view"></div><div class="cam-flash"></div>
+          <div class="cam-lens"><i></i></div><span class="cam-heart">♥</span></div>
+      </div>
+      <div class="obj plant" data-obj="plant" tabindex="0" role="button" aria-label="桂花">
+        <img class="osmanthus" src="assets/props/osmanthus.webp" alt="" draggable="false">
+        <div class="pot celadon-pot"></div>
+      </div>
+      <div class="obj calendar" data-obj="calendar" tabindex="0" role="button" aria-label="台历">
+        <div class="cal-rings"><i></i><i></i><i></i></div>
+        <div class="cal-body">
+          <div class="cal-month">OCT</div>
+          <div class="cal-day">13</div>
+          <div class="cal-week">MON</div>
+        </div>
+      </div>
+      <div class="obj figure2" data-obj="figure2" tabindex="0" role="button" aria-label="立牌 · A">
+        <div class="fig-base"></div>
+        <div class="fig-svg" id="deskFigure2"></div>
+      </div>
+      <div class="obj figure" data-obj="figure" tabindex="0" role="button" aria-label="立牌 · B">
+        <div class="fig-base"></div>
+        <div class="fig-svg" id="deskFigure"></div>
+      </div>
+      <div class="obj lamp" data-obj="lamp" tabindex="0" role="button" aria-label="台灯">
+        <div class="lamp-shade"></div><div class="lamp-neck"></div><div class="lamp-base"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="warm" aria-hidden="true"></div>
+
+
+  <!-- ================= DESK ================= -->
+  <div class="desk"></div>
+  <div class="desk-edge"></div>
+  <div class="desk-shadow"></div>
+
+  <!-- ---------- LEFT CLUSTER ---------- -->
+  <div class="obj book" data-obj="book" tabindex="0" role="button" aria-label="书">
+    <div class="book-pages">
+      <div class="bk-line"></div><div class="bk-line"></div><div class="bk-line short"></div>
+      <div class="bk-line"></div><div class="bk-line short"></div>
+      <div class="bookmark"></div>
+    </div>
+  </div>
+
+  <div class="obj pens" data-obj="pens" tabindex="0" role="button" aria-label="笔筒">
+    <i class="pen pc1"></i><i class="pen pc2"></i><i class="pen pc3"></i><i class="pen pc5"></i>
+    <div class="cup"></div>
+  </div>
+
+  <div class="obj mug" data-obj="mug" tabindex="0" role="button" aria-label="茶盏">
+    <div class="steam s1"></div><div class="steam s2"></div><div class="steam s3"></div>
+    <img class="teacup" src="assets/props/tea_cup.webp" alt="" draggable="false">
+  </div>
+
+  <div class="obj contract" data-obj="contract" tabindex="0" role="button" aria-label="契约卷轴">
+    <img src="assets/props/contract_scroll.webp" alt="" draggable="false">
+  </div>
+
+  <div class="obj mora" data-obj="mora" tabindex="0" role="button" aria-label="摩拉">
+    <img src="assets/props/mora.webp" alt="" draggable="false">
+  </div>
+
+  <div class="deco amber" aria-hidden="true"><img src="assets/props/amber_stone.webp" alt=""></div>
+  <div class="deco seal" aria-hidden="true"><img src="assets/props/geo_seal.webp" alt=""></div>
+
+  <div class="obj headphones" data-obj="headphones" tabindex="0" role="button" aria-label="耳机">
+    <svg viewBox="0 0 200 170" aria-hidden="true">
+      <path class="hp-band" d="M30 110 A70 70 0 0 1 170 110" />
+      <rect class="hp-cup" x="14" y="100" width="42" height="58" rx="14"/>
+      <rect class="hp-cup" x="144" y="100" width="42" height="58" rx="14"/>
+      <rect class="hp-pad" x="24" y="112" width="22" height="34" rx="9"/>
+      <rect class="hp-pad" x="154" y="112" width="22" height="34" rx="9"/>
+    </svg>
+  </div>
+
+  <!-- （手办已移到墙上木架，桌面更整洁） -->
+
+  <div class="obj speaker" data-obj="speaker" tabindex="0" role="button" aria-label="音响">
+    <div class="bar-body">
+      <div class="bar-grille"></div>
+      <div class="eq" id="eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>
+
+  <!-- ---------- CENTER: MONITOR ---------- -->
+  <div class="obj monitor" data-obj="monitor" tabindex="0" role="button" aria-label="电脑显示器">
+    <div class="mon-body">
+      <div class="screen">
+        <div class="scr-bar"><i class="dot r"></i><i class="dot y"></i><i class="dot g"></i><span>localhost:7777</span></div>
+        <div class="scr-body">
+          <div class="scr-side">
+            <span class="ln w1"></span><span class="ln w2"></span><span class="ln w3"></span>
+            <span class="ln w2"></span><span class="ln w1"></span>
+          </div>
+          <div class="scr-main">
+            <div class="scr-hi">TODAY · LOCAL</div>
+            <div class="scr-prog"><i style="width:64%"></i></div>
+            <div class="scr-prog p2"><i style="width:38%"></i></div>
+            <div class="scr-chip">▶ 今天只保一条线</div>
+          </div>
+        </div>
+        <div class="scan"></div>
+      </div>
+      <div class="mon-logo">LOCAL</div>
+    </div>
+    <div class="mon-neck"></div>
+    <div class="mon-foot"></div>
+    <div class="mon-glow"></div>
+  </div>
+
+  <div class="obj keyboard" data-obj="keyboard" tabindex="0" role="button" aria-label="键盘">
+    <div class="kbd" id="kbd"></div>
+  </div>
+
+  <div class="obj mouse" data-obj="mouse" tabindex="0" role="button" aria-label="鼠标">
+    <div class="m-wheel"></div>
+  </div>
+
+  <!-- ---------- RIGHT: PC TOWER ---------- -->
+  <div class="obj pc" data-obj="pc" tabindex="0" role="button" aria-label="主机">
+    <div class="pc-case">
+      <div class="pc-glass">
+        <div class="fan f1"><i></i></div>
+        <div class="fan f2"><i></i></div>
+        <div class="rbgb"></div>
+      </div>
+      <div class="pc-front">
+        <span class="pc-power"></span>
+        <span class="vent"></span><span class="vent"></span><span class="vent"></span>
+        <div class="pc-txt">GEO · RTX</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- RIGHT CLUSTER ON DESK ---------- -->
+  <div class="obj cd" data-obj="cd" tabindex="0" role="button" aria-label="CD 机">
+    <div class="case-base">
+      <div class="case-tray"></div>
+      <div class="cd-disc"><span id="cdDisc"></span></div>
+    </div>
+    <div class="case-lid"></div>
+  </div>
+
+  <div class="obj tablet" data-obj="tablet" tabindex="0" role="button" aria-label="平板">
+    <div class="tab-screen">
+      <div class="tab-grid"><i></i><i></i><i></i><i></i></div>
+      <div class="tab-play">▶</div>
+    </div>
+  </div>
+
+  <div class="obj phone" data-obj="phone" tabindex="0" role="button" aria-label="手机">
+    <div class="iph-frame">
+      <div class="iph-screen">
+        <div class="iph-notch"></div>
+        <span class="iph-time">21:24</span>
+        <div class="iph-icons"><i></i><i></i><i></i><i></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="obj controller" data-obj="controller" tabindex="0" role="button" aria-label="游戏手柄">
+    <svg viewBox="0 0 240 130" aria-hidden="true">
+      <path class="pad-body" d="M40 20 h160 a34 34 0 0 1 34 34 v18 a30 30 0 0 1 -54 20 l-14 -14 h-92 l-14 14 a30 30 0 0 1 -54 -20 v-18 a34 34 0 0 1 34 -34 z"/>
+      <rect class="pad-dpad" x="42" y="46" width="40" height="14" rx="4"/>
+      <rect class="pad-dpad" x="56" y="32" width="14" height="42" rx="4"/>
+      <circle class="pad-btn a" cx="182" cy="42" r="10"/>
+      <circle class="pad-btn b" cx="204" cy="58" r="10"/>
+      <circle class="pad-btn x" cx="160" cy="58" r="10"/>
+      <circle class="pad-btn y" cx="182" cy="74" r="10"/>
+    </svg>
+  </div>
+
+  <div class="obj glasses" data-obj="glasses" tabindex="0" role="button" aria-label="眼镜">
+    <svg viewBox="0 0 220 84" aria-hidden="true">
+      <!-- 板材黑框眼镜 -->
+      <rect x="10" y="16" width="86" height="54" rx="16" class="gl-lens"/>
+      <rect x="124" y="16" width="86" height="54" rx="16" class="gl-lens"/>
+      <path class="gl-bridge" d="M96 38 q14 -10 28 0"/>
+      <path class="gl-temple" d="M10 30 l-9 -9"/>
+      <path class="gl-temple" d="M210 30 l9 -9"/>
+      <path class="gl-shine" d="M20 24 l18 0"/>
+      <path class="gl-shine" d="M134 24 l18 0"/>
+    </svg>
+  </div>
+
+  <!-- floating hover label -->
+  <div id="label" class="label"></div>
+
+</div><!-- /stage -->
+</div><!-- /viewport -->
+
+<footer id="ticker">
+  <span class="tick-in">✦ 点一点桌上的东西，它们都是活的 ✦</span>
+</footer>
+
+<!-- ============ MODAL ============ -->
+<div id="modal" hidden>
+  <div class="modal-bg"></div>
+  <div class="panel" role="dialog" aria-modal="true">
+    <button class="panel-close" aria-label="关闭">✕</button>
+    <div class="panel-body" id="panelBody"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="cmd" hidden><input id="cmdInput" placeholder="找东西 / 打开面板…"><div id="cmdList"></div></div>
+
+<audio id="sfx" preload="none"></audio>
+
+<script src="js/data.js?v=yz34"></script>
+<script src="js/daily-sessions.js?v=yz20"></script>
+<script src="js/gallery.js?v=yz20"></script>
+<script src="js/today.js?v=yz20"></script>
+<script src="js/uploads.js?v=yz21"></script>
+<script src="js/digest.js?v=yz30" onerror="this.remove()"></script>
+<script src="js/digest-versions.js?v=yz31" onerror="this.remove()"></script>
+<script src="js/digest-panel.js?v=yz31"></script>
+<script src="js/notes-board.js?v=nb1"></script>
+<script src="js/todos-board.js?v=td1"></script>
+<script src="js/vibe.js?v=yz23"></script>
+<script src="js/sessions.js?v=yz20"></script>
+<script src="js/daily-songs.js?v=cd5"></script>
+<script src="js/music-lib.js?v=cd1"></script>
+<script src="js/cd.js?v=cd4"></script>
+<script src="js/game.js?v=yz20"></script>
+<script src="js/local-api.js?v=local1"></script>
+<script src="js/app.js?v=local1"></script>
+<script src="js/voice-manifest.js?v=vo1"></script>
+<script src="js/projector-chalk.js?v=ck1"></script>
+<script src="js/projector-library.js?v=pj3"></script>
+<script src="js/projector.js?v=pj4"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "note": "一条链接 = 一个真实位置。type: folder | file | url | app | command。command 默认不允许执行。",
+  "links": [
+    {
+      "id": "inbox",
+      "label": "收件箱",
+      "group": "入口",
+      "type": "folder",
+      "target": "~/Desktop",
+      "icon": "📥",
+      "note": "先改成一个你每天真的会打开的文件夹"
+    },
+    {
+      "id": "notes",
+      "label": "便签账本",
+      "group": "数据",
+      "type": "file",
+      "target": "data/notes.jsonl",
+      "icon": "🗒",
+      "note": "append-only，可 diff"
+    },
+    {
+      "id": "todos",
+      "label": "待办账本",
+      "group": "数据",
+      "type": "file",
+      "target": "data/todos.jsonl",
+      "icon": "✅",
+      "note": "append-only，可 diff"
+    },
+    {
+      "id": "links",
+      "label": "链接表",
+      "group": "数据",
+      "type": "file",
+      "target": "data/links.json",
+      "icon": "🔗",
+      "note": "这个索引的源头"
+    },
+    {
+      "id": "schedule",
+      "label": "定时清单",
+      "group": "Agent",
+      "type": "file",
+      "target": "data/schedule.json",
+      "icon": "⏰",
+      "note": "只写 prompt，不装 cron"
+    },
+    {
+      "id": "claude",
+      "label": "Claude Code",
+      "group": "Agent",
+      "type": "app",
+      "target": "Claude",
+      "icon": "🤖",
+      "note": "本机装了才会打开"
+    },
+    {
+      "id": "codex",
+      "label": "Codex",
+      "group": "Agent",
+      "type": "app",
+      "target": "Codex",
+      "icon": "⌨",
+      "note": "本机装了才会打开"
+    },
+    {
+      "id": "readme",
+      "label": "README",
+      "group": "文档",
+      "type": "file",
+      "target": "README.md",
+      "icon": "📖",
+      "note": "安装、结构、方法论"
+    },
+    {
+      "id": "method",
+      "label": "方法论",
+      "group": "文档",
+      "type": "file",
+      "target": "METHOD.md",
+      "icon": "🧭",
+      "note": "本地数据 + 链接索引 + agent 时钟"
+    }
+  ]
+}

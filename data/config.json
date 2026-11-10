@@ -1,0 +1,6 @@
+{
+  "agent": "auto",
+  "transcriptRoots": [],
+  "galleryDirs": ["data/uploads"],
+  "uploadDirs": ["data/uploads"]
+}
