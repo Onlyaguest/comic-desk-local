@@ -205,8 +205,8 @@
   // 念出来只用「登记过的音色」烤好的音频（tools/voices.json → js/voice-manifest.js，默认音色）。
   // 没烤过的页：只打字幕、不出声。绝不用浏览器自带的通用语音顶替。
   let typer = 0, timer = 0, vo = null;
-  const VOICE = () => window.DESK_VOICE || { default: 'yuanzi', voices: {}, lines: {} };
-  const voiceKey = () => (S.deck && S.deck.voice) || VOICE().default || 'yuanzi';
+  const VOICE = () => window.DESK_VOICE || { default: 'default', voices: {}, lines: {} };
+  const voiceKey = () => (S.deck && S.deck.voice) || VOICE().default || 'default';
   const voiceName = () => ((VOICE().voices || {})[voiceKey()] || {}).name || '默认音色';
   function voiceFor(s, note) {
     if (s.voice) return s.voice;                                   // 幻灯里自带的（可走的世界那种）

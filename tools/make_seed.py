@@ -96,9 +96,9 @@ content = {
     },
     'window': {
         'mode': 'auto', 'city': '我的城市', 'sign': 'LOCAL DESK', 'lanterns': True,
-        'dashboard': {'title': '索引 · 所有物件与链接', 'sub': '本地生成的 INDEX.html', 'url': '/INDEX.html'},
+        'dashboard': {'title': '索引 · 所有物件与链接', 'sub': '本地生成的 catalog.html', 'url': '/catalog.html'},
     },
-    'arsenal': {'title': '索引 · 物件与链接', 'sub': '每个物件、每条链接、每个数据文件', 'url': '/INDEX.html'},
+    'arsenal': {'title': '索引 · 物件与链接', 'sub': '每个物件、每条链接、每个数据文件', 'url': '/catalog.html'},
     'about': {
         'kicker': 'MY DESK',
         'name': '我',
@@ -160,7 +160,7 @@ content = {
     'watchlist': {'title': '日常在看', 'sub': '在 data/links.json 里加一条，就会出现在这里', 'items': []},
     'gamelib': {'title': '游戏库', 'sub': '本地版不内置；想放就加 links', 'from': '', 'groups': []},
     'books': [],
-    'booksLink': '/INDEX.html',
+    'booksLink': '/catalog.html',
     'booksLinkLabel': '打开索引页 ↗',
     'booksLink2': '',
     'booksLink2Label': '',
@@ -207,7 +207,7 @@ content = {
     'update': {'title': '这张桌子怎么更新？', 'lines': [
         '所有内容在 data/：content.json（文案与结构）、links.json（入口）、notes.jsonl / todos.jsonl（账本）、schedule.json（交给 agent 的定时）。',
         '改完运行 desk build，刷新页面即可。',
-        '页面里的勾选、便签、随手记、茶盏数、配色只存在你自己的浏览器。',
+        '勾选和便签写入本机账本；配色等外观偏好保存在浏览器。',
         '这张桌子只在本机跑：http://127.0.0.1:7777',
     ]},
     'labels': labels,
@@ -251,21 +251,20 @@ schedule = {
 
 def dump(name, obj):
     p = os.path.join(ROOT, 'data', name)
+    if os.path.exists(p): return
+    os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, 'w', encoding='utf-8') as f:
         json.dump(obj, f, ensure_ascii=False, indent=2)
         f.write('\n')
 
 dump('content.json', content)
 dump('links.json', links)
-dump('schedule.json', schedule)
+dump('schedule.json', {'version': 1, 'jobs': []})
 
-with open(os.path.join(ROOT, 'data', 'notes.jsonl'), 'w', encoding='utf-8') as f:
-    for r in notes:
-        f.write(json.dumps(r, ensure_ascii=False) + '\n')
-
-with open(os.path.join(ROOT, 'data', 'todos.jsonl'), 'w', encoding='utf-8') as f:
-    for r in todos:
-        f.write(json.dumps(r, ensure_ascii=False) + '\n')
-
-open(os.path.join(ROOT, 'data', 'content.local.json'), 'w', encoding='utf-8').write('{}\n')
-print('seed written')
+for name, rows in [('notes.jsonl', notes), ('todos.jsonl', [])]:
+    p = os.path.join(ROOT, 'data', name)
+    if not os.path.exists(p):
+        with open(p, 'w', encoding='utf-8') as f:
+            for row in rows: f.write(json.dumps(row, ensure_ascii=False) + '\n')
+dump('content.local.json', {})
+print('seed ready')

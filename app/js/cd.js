@@ -29,7 +29,7 @@
       dur: s.seconds ? fmt(s.seconds) : '', lyrics: s.lyrics, style: s.style, date: s.date,
     }));
     DISCS = [
-      { id: 'daily', icon: '📅', title: '每日一首', sub: '每天根据前一天的日结自动写一首（song2）', tracks: daily, color: '#ff5fa2', empty: '还没有歌。日结出来后会自动生成。' },
+      { id: 'daily', icon: '📅', title: '每日一首', sub: '手动收录的每日歌曲；当前未配置自动生成', tracks: daily, color: '#ff5fa2', empty: '还没有收录歌曲。添加本地歌单后，歌曲会显示在这里。' },
       { id: 'mine', icon: '💿', title: (D.music.album || {}).title || '本地歌单', sub: (D.music.album || {}).sub || '', tracks: (D.music.songs || []).map((s) => ({ ...s })), color: '#ffb020' },
     ];
     if (L.studio) DISCS.push({ id: 'studio', icon: '🎤', title: L.studio.title, sub: L.studio.sub, tracks: L.studio.tracks, page: L.studio.page, color: '#7c4dff' });

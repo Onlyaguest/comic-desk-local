@@ -5,7 +5,7 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 
 from .paths import ROOT, APP, DATA, GEN, load_json
-from . import actions, adapters
+from . import actions, adapters, indexapi
 
 HOST = "127.0.0.1"
 PORT = 7777
@@ -74,6 +74,11 @@ class Handler(BaseHTTPRequestHandler):
         u = urllib.parse.urlparse(self.path)
         path = u.path
         q = urllib.parse.parse_qs(u.query)
+        host = self.headers.get("Host", "").split(":")[0]
+        if host not in ("127.0.0.1", "localhost"):
+            return _json(self, 403, {"error": "仅本机访问"})
+        if indexapi.handle(self, "GET", path, q, _json):
+            return
         if path == "/api/health":
             return _json(self, 200, {"ok": True, "root": str(ROOT)})
         if path == "/api/state":
@@ -125,7 +130,7 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(body)
             return
-        if path in ("/INDEX.html", "/README.md", "/METHOD.md"):
+        if path in ("/catalog.html", "/README.md", "/METHOD.md"):
             p = ROOT / path.lstrip("/")
             if p.exists():
                 if p.suffix == ".md":
@@ -142,6 +147,14 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         u = urllib.parse.urlparse(self.path)
+        host = self.headers.get("Host", "")
+        origin = self.headers.get("Origin")
+        if host.split(":")[0] not in ("127.0.0.1", "localhost") or (origin and origin not in ("http://" + host,)):
+            return _json(self, 403, {"error": "仅同源本机操作"})
+        if self.headers.get("Sec-Fetch-Site") == "cross-site":
+            return _json(self, 403, {"error": "拒绝跨站操作"})
+        if indexapi.handle(self, "POST", u.path, {}, _json):
+            return
         if u.path != "/api/action":
             return _json(self, 404, {"ok": False, "error": "not found"})
         n = int(self.headers.get("content-length") or 0)

@@ -87,12 +87,65 @@ class Notes:
         raise ValueError(f"不认识的便签操作：{op}")
 
 
+SESSION_START_DAY = (load_json(DATA / "sources.local.json", {}) or {}).get("sessionStartDay", "2026-11-11")
+
+
+def session_tasks(day=None):
+    """Read the complete index without modifying it; completion lives in the todo log."""
+    import sqlite3
+    from datetime import datetime, timezone, timedelta
+    from urllib.parse import quote
+    from . import indexdb
+    tz = timezone(timedelta(hours=8))
+    day = day or datetime.now(tz).date().isoformat()
+    if not indexdb.DB.exists():
+        return {}
+    end = (datetime.fromisoformat(day).replace(tzinfo=tz) + timedelta(days=1)).isoformat()
+    with sqlite3.connect(indexdb.DB.as_uri() + "?mode=ro", uri=True) as c:
+        c.row_factory = sqlite3.Row
+        rows = c.execute("""
+            SELECT s.*, (SELECT group_concat(source) FROM origins o WHERE o.session_id=s.id) AS sources,
+              max(coalesce(julianday(s.updated),0),
+                  coalesce((SELECT max(julianday(m.ts)) FROM messages m
+                            WHERE m.session_id=s.id AND julianday(m.ts)<julianday(?)),0)) AS activity
+            FROM sessions s
+            WHERE activity>=julianday(?) AND activity<julianday(?)
+            ORDER BY activity DESC
+        """, (end, SESSION_START_DAY + "T00:00:00+08:00", end)).fetchall()
+        dialogue = {}
+        for r in rows:
+            last = c.execute("""SELECT ts,role,text FROM messages WHERE session_id=?
+                                AND role IN ('user','assistant')
+                                ORDER BY julianday(ts) DESC,seq DESC LIMIT 1""", (r["id"],)).fetchone()
+            if last:
+                import json
+                dialogue[r["id"]] = {
+                    "ts": last["ts"] or "",
+                    "hash": hashlib.sha256(json.dumps(list(last), ensure_ascii=False).encode()).hexdigest(),
+                }
+    items = {}
+    for r in rows:
+        dt = datetime.fromtimestamp(round((r["activity"] - 2440587.5) * 86400), tz)
+        sid = r["id"]
+        rid = "indexed-session:" + sid
+        items[rid] = {
+            "id": rid, "session_id": sid, "kind": "session", "state": "open",
+            "session": r["title"], "text": "", "space": r["workspace"],
+            "day": dt.date().isoformat(), "last": dt.strftime("%H:%M"),
+            "url": "/library.html?session=" + quote(sid),
+            "sources": (r["sources"] or r["engine"]).split(","),
+            "status": "indexed", "seq": 0, "dialogue": dialogue.get(sid),
+        }
+    return items
+
+
 class Todos:
-    def __init__(self, path=TODOS):
+    def __init__(self, path=TODOS, include_sessions=None):
         self.path = path
+        self.include_sessions = path == TODOS if include_sessions is None else include_sessions
 
     def _items(self) -> dict[str, dict]:
-        items: dict[str, dict] = {}
+        items: dict[str, dict] = session_tasks() if self.include_sessions else {}
         seq = 0
         for r in read_jsonl(self.path):
             op, rid = r.get("op"), r.get("id")
@@ -115,6 +168,7 @@ class Todos:
                     items[rid]["text"] = r.get("text", items[rid]["text"])
                 elif op == "done":
                     items[rid]["state"] = "done"; items[rid]["doneAt"] = r.get("at", iso())
+                    items[rid]["completed_dialogue"] = r.get("dialogue")
                 elif op == "reopen":
                     items[rid]["state"] = "open"; items[rid].pop("doneAt", None)
                 elif op == "drop":
@@ -124,14 +178,50 @@ class Todos:
                         if r.get(k) is not None:
                             items[rid][k] = r[k]
                 items[rid]["updated"] = r.get("at", iso())
+        from datetime import datetime, timezone, timedelta
+        def timestamp(value):
+            try:
+                dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                return dt.replace(tzinfo=timezone(timedelta(hours=8))).timestamp() if dt.tzinfo is None else dt.timestamp()
+            except (ValueError, AttributeError):
+                return None
+        for item in items.values():
+            current = item.get("dialogue")
+            if item.get("state") != "done" or not item.get("session_id") or not current:
+                continue
+            completed = item.get("completed_dialogue")
+            current_ts = timestamp(current.get("ts"))
+            if completed:
+                previous_ts = timestamp(completed.get("ts"))
+                changed = current["hash"] != completed["hash"]
+                newer = changed and (previous_ts is None or
+                                     (current_ts is not None and current_ts >= previous_ts))
+            else:
+                # Legacy completion events have no body watermark: only newer-dated messages reopen.
+                done_ts = timestamp(item.get("doneAt"))
+                newer = current_ts is not None and done_ts is not None and current_ts > done_ts
+            if newer:
+                item["state"] = "open"
+                item["reopened_by"] = "new_dialogue"
         return items
 
     def list(self) -> dict:
         items = self._items()
-        d = today()
+        from datetime import datetime, timezone, timedelta
+        d = datetime.now(timezone(timedelta(hours=8))).date().isoformat()
         vals = list(items.values())
         today_open = [x for x in vals if x.get("day") == d and x.get("state") == "open"]
-        done_today = [x for x in vals if x.get("day") == d and x.get("state") == "done"]
+        def completed_today(item):
+            if item.get("state") != "done":
+                return False
+            try:
+                at = datetime.fromisoformat(item.get("doneAt", "").replace("Z", "+00:00"))
+                if at.tzinfo is None:
+                    at = at.replace(tzinfo=timezone(timedelta(hours=8)))
+                return at.astimezone(timezone(timedelta(hours=8))).date().isoformat() == d
+            except ValueError:
+                return False
+        done_today = [x for x in vals if completed_today(x)]
         carry = [x for x in vals if str(x.get("day", "")) < d and x.get("state") == "open"]
         dropped = [x for x in vals if x.get("state") == "dropped"]
         order = lambda x: (str(x.get("last", "")), x.get("seq", 0))
@@ -139,7 +229,7 @@ class Todos:
         carry.sort(key=order, reverse=True); dropped.sort(key=order, reverse=True)
         return {
             "schema": "comic-desk.todos.log.v1", "at": iso(), "today": d, "events": len(read_jsonl(self.path)),
-            "session": {}, "today_open": today_open, "carry": carry, "done_today": done_today,
+            "start_day": SESSION_START_DAY, "session": {}, "today_open": today_open, "carry": carry, "done_today": done_today,
             "dropped": dropped,
             "counts": {"open": len(today_open) + len(carry), "done": len(done_today), "carry": len(carry), "dropped": len(dropped)},
         }
@@ -167,6 +257,10 @@ class Todos:
             return self.list()
         if op in ("done", "reopen", "drop", "update"):
             rec = {"op": op, "id": payload.get("id"), "reason": payload.get("reason", ""), "at": iso(), "by": "page"}
+            if op == "done":
+                item = self._items().get(payload.get("id"), {})
+                if item.get("session_id"):
+                    rec["dialogue"] = item.get("dialogue")
             for k in ("text", "asks", "last", "first", "status", "url", "session", "space", "tag"):
                 if payload.get(k) is not None:
                     rec[k] = payload[k]

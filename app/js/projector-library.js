@@ -43,7 +43,7 @@
       });
 
       items.push({ id: 'readme', kind: 'text', title: '这张桌子怎么用 · README', src: 'README.md', note: '原文按小节分页，查字段时用' });
-      items.push({ id: 'index', kind: 'html', title: '索引 · 所有物件与链接', src: 'INDEX.html', note: '本地索引页：每个物件、每条链接、每个数据文件' });
+      items.push({ id: 'index', kind: 'html', title: '索引 · 所有物件与链接', src: 'catalog.html', note: '本地索引页：每个物件、每条链接、每个数据文件' });
 
       (D.photos || []).slice(0, 8).forEach((p, i) => items.push({ id: 'photo-' + i, kind: 'image', title: p.title || '照片', src: p.file, note: [p.cat, p.loc].filter(Boolean).join(' · ') }));
       (window.DESK_GALLERY || []).slice(0, 6).forEach((g, i) => items.push({ id: 'gen-' + i, kind: 'image', title: '最新图片 · ' + (i + 1), src: g.url, note: (g.created || '').slice(0, 10) + ' · ' + (g.src || '') }));

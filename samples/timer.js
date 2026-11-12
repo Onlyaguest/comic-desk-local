@@ -1,0 +1,1 @@
+let timer; document.querySelector('#start').onclick=()=>{clearInterval(timer);let n=60;const el=document.querySelector('#clock');el.textContent=n;timer=setInterval(()=>{el.textContent=--n;if(n<=0)clearInterval(timer)},1000)};

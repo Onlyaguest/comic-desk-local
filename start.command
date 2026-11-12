@@ -2,4 +2,5 @@
 # 双击我：启动桌面
 set -e
 cd "$(dirname "$0")"
-exec python3 bin/desk serve
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+exec python3 bin/launch.py

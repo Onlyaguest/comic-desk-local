@@ -276,17 +276,37 @@
     };
     put('#deskFigure', D.figures[0]);
     put('#deskFigure2', D.figures[1] || D.figures[0]);
+    ['figure', 'figure2'].forEach((id, i) => { const el = $('[data-obj="' + id + '"]'), f = D.figures[i] || D.figures[0]; if (el && f) el.setAttribute('aria-label', f.name); });
   }
 
-  /* 海报：放最新一张生成的图片（js/gallery.js，新 → 旧） */
-  function buildPoster() {
-    const g = window.DESK_GALLERY || [];
-    const img = $('#posterImg'), stamp = $('#posterStamp');
-    if (!g.length || !img) return;
-    img.src = g[0].url;
-    img.hidden = false;
-    $('.poster').classList.add('has-img');
-    if (stamp) stamp.remove();   // 海报上只留图片，不要「作品展台 · N」浮签
+  /* 展台封面：只读本地索引最新图片，不触发源同步或模型调用。 */
+  async function buildPoster() {
+    const img = $('#posterImg'), poster = $('.poster'), stamp = $('#posterStamp');
+    if (!img || !poster) return;
+    try {
+      const response = await fetch('/api/index/cover');
+      if (!response.ok) throw Error('图片索引不可用');
+      const data = await response.json(), latest = data.item;
+      if (!latest) {
+        img.hidden = true; img.removeAttribute('src'); poster.classList.remove('has-img');
+        if (stamp) stamp.hidden = false;
+        poster.setAttribute('aria-label', '作品展台');
+        return;
+      }
+      const url = '/api/index/image?id=' + encodeURIComponent(latest.id) + '&v=' + encodeURIComponent(latest.updated || '');
+      if (img.getAttribute('src') === url) return;
+      img.onload = () => {
+        img.hidden = false; poster.classList.add('has-img');
+        if (stamp) stamp.hidden = true;
+        poster.setAttribute('aria-label', '作品展台：' + latest.title);
+      };
+      img.onerror = () => {
+        img.hidden = true; poster.classList.remove('has-img');
+        if (stamp) stamp.hidden = false;
+        poster.setAttribute('aria-label', '作品展台');
+      };
+      img.alt = latest.title; img.src = url;
+    } catch (_) { /* 保留现有封面或默认展台，不打断桌面。 */ }
   }
 
   function buildMonitorChip() {
@@ -333,7 +353,8 @@
   function bindLabels() {
     $$('.obj').forEach((obj) => {
       const id = obj.dataset.obj;
-      const lb = LBL[id];
+      const figure = id === 'figure' ? D.figures[0] : id === 'figure2' ? (D.figures[1] || D.figures[0]) : null;
+      const lb = figure ? { ...LBL[id], zh: figure.name } : LBL[id];
       obj.addEventListener('mouseenter', () => {
         if (!lb) return;
         label.textContent = lb.zh + (binding(id) ? ' · 🔗' : '');
@@ -356,7 +377,14 @@
   /* ============================================================
    *  面板
    * ============================================================ */
-  function openModal() { modal.hidden = false; }
+  let panelReturnFocus = null;
+  function openModal() {
+    if (modal.hidden) panelReturnFocus = document.activeElement;
+    modal.hidden = false;
+    const heading = panelBody.querySelector('h2');
+    $('.panel').setAttribute('aria-label', heading ? heading.textContent : '桌面面板');
+    $('.panel-close').focus({ preventScroll: true });
+  }
   function runCleanup() {
     panelCleanup.forEach((fn) => { try { fn(); } catch (e) {} });
     panelCleanup = [];
@@ -365,12 +393,29 @@
     if (modal.hidden) return;
     modal.hidden = true;
     runCleanup();
+    if (panelReturnFocus && panelReturnFocus.isConnected) panelReturnFocus.focus({ preventScroll: true });
     stage.classList.toggle('playing', !!(window.DESK_CD && window.DESK_CD.isPlaying()));   // CD 机常驻：关面板不停歌
     window.playSfx('close');
   }
   modal.addEventListener('click', (e) => { if (e.target.classList.contains('modal-bg')) closePanel(); });
   $('.panel-close').addEventListener('click', closePanel);
-  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanel(); });
+  window.addEventListener('keydown', (e) => {
+    const command = $('#cmd');
+    const active = !command.hidden ? command : !modal.hidden ? modal : null;
+    if (!active) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (active === command) closeCmd(); else closePanel();
+    }
+    if (e.key === 'Tab') {
+      const controls = [...active.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), iframe, [tabindex="0"]')].filter(el => el.getClientRects().length);
+      const first = controls[0], last = controls[controls.length - 1];
+      if (!first) { e.preventDefault(); return; }
+      if (!active.contains(document.activeElement) || (e.shiftKey && document.activeElement === first) || (!e.shiftKey && document.activeElement === last)) {
+        e.preventDefault(); (e.shiftKey ? last : first).focus();
+      }
+    }
+  });
 
   function wiggle(id) {
     const el = $(`.obj[data-obj="${id}"]`); if (!el) return;
@@ -419,7 +464,7 @@
   /* ---------- 面板：显示器 · 今日待办 ---------- */
   /* ---------- 面板：显示器 · 待办 TODAY + 进度（账号层：今天我在所有空间发起的事，见 js/today.js） ---------- */
   const K_SEEN = 'yz_desk_today_seen_v1', K_TDONE = 'yz_desk_today_done_v1';
-  const ST_ZH = { running: '进行中', replied: '已回复 · 待你确认', cancelled: '已取消', error: '出错' };
+  const ST_ZH = { indexed: '已收录 · 状态见详情', running: '进行中', replied: '已回复 · 待你确认', cancelled: '已取消', error: '出错' };
   async function cohubClient() { throw new Error('本版本不使用 Cohub 客户端，改用本地 /api'); }
 
   // 按钮：运行 App Action「refresh-today」（拥有者在平台沙箱里跑，访客无需授权），拿回最新 JSON
@@ -441,15 +486,27 @@
   function panelWork() {
     const snap = store.get(K_TODOS_SNAP, null), base = window.DESK_TODOS;
     let B = (snap && base && String(snap.at) > String(base.at)) ? snap : (base || snap || { today: '', today_open: [], carry: [], done_today: [], dropped: [], counts: {} });
-    let status = 'snapshot', busy = '', openCarry = false, openDrop = false, openDone = false;   // 三个折叠区默认都收起
-    const S = (window.DESK_TODAY && window.DESK_TODAY.stats) || {};
+    let active = true;
+    panelCleanup.push(() => { active = false; });
+    let writing = false;
+    let status = 'snapshot', busy = '', openCarry = true, openDrop = false, openDone = false;   // 三个折叠区默认都收起
+    let T = window.DESK_TODAY || {items:[],counts:{}};
+    const S = T.stats || {};
+    const sourceNames = {codex:'Codex',claude:'Claude',mirasim:'Mirasim',cohub:'Cohub',workbuddy:'WorkBuddy'};
+
     const setB = (b) => { B = b; store.set(K_TODOS_SNAP, b); };
 
     const row = (t, mode) => {
       const isS = t.kind === 'session';
+      if (t.session_id) return `<div class="task td ${mode === 'done' ? 'done' : ''}" data-id="${esc(t.id)}">
+        <button type="button" class="box" data-act="${mode === 'done' ? 'reopen' : 'done'}" aria-label="${mode === 'done' ? '重新打开：' : '确认完成：'}${esc(t.session)}" aria-pressed="${mode === 'done'}">${mode === 'done' ? '✓' : ''}</button>
+        <div class="tx"><button type="button" class="today-session-open" data-open-session="${esc(t.session_id)}"><b>${esc(t.session)}</b></button></div>
+        <span class="tag">${esc([...new Set(t.sources && t.sources.length ? t.sources : [t.session_id.split(':')[0]])].map(s => sourceNames[s] || s).join(' / '))}</span>
+        ${mode === 'done' ? '' : '<button class="td-drop" data-act="drop">放下</button>'}
+      </div>`;
       const st = isS ? `<span class="tag st-${esc(t.status)}">${esc(ST_ZH[t.status] || t.status)}</span>` : '<span class="tag">我加的</span>';
       return `<div class="task td ${mode === 'done' ? 'done' : ''}" data-id="${esc(t.id)}">
-        <span class="box" data-act="${mode === 'done' ? 'reopen' : 'done'}" title="${mode === 'done' ? '重新打开' : '勾掉（我确认做完了）'}">${mode === 'done' ? '✓' : ''}</span>
+        <button type="button" class="box" data-act="${mode === 'done' ? 'reopen' : 'done'}" aria-label="${mode === 'done' ? '重新打开：' : '确认完成：'}${esc(t.session || t.text)}" aria-pressed="${mode === 'done'}" title="${mode === 'done' ? '重新打开' : '勾掉（我确认做完了）'}">${mode === 'done' ? '✓' : ''}</button>
         <span class="tx">${isS ? `<b>${esc(t.session)}</b><small>${esc(t.text)}</small>
           <small class="td-meta">${esc(t.space)} · ${esc(t.first || '')}${t.last && t.last !== t.first ? '–' + esc(t.last) : ''} · ${t.asks || 1} 次 · <a href="${esc(t.url)}" target="_blank" rel="noopener">打开 ↗</a></small>` : esc(t.text)}</span>
         ${st}
@@ -462,96 +519,135 @@
       const sess = B.session;
       const statusTxt = { snapshot: '这是快照，正在拉最新账本…', live: '已同步账本', offline: '本地服务没连上：只能看', error: '刚才那次没写进去，可以再试' }[status] || '';
       return `
-        <span class="kicker">MONITOR · 待办</span>
+        <span class="kicker">MONITOR · 今日会话与待办</span>
         <h2>${esc(B.today || '今天')} · 我在忙的事</h2>
-        <p class="muted">${esc(statusTxt)} · 开着 ${c.open || 0}（往日没收口 ${c.carry || 0}）· 从 Session 收进来的是候选：agent 回复了 ≠ 做完，你勾掉才算。</p>
+        <p class="muted">${esc(statusTxt)} · 开着 ${c.open || 0}（往日没收口 ${c.carry || 0}）· 从 2026-11-11 起按会话收录；未勾选就保留，agent 回复不算完成。</p>
         <div class="td-bar">
-          <button class="btn" id="tdRefresh" ${busy ? 'disabled' : ''}>${busy ? '⏳ ' + esc(busy) : '↻ 刷新今天（收进账本）'}</button>
-          ${sess ? `<a class="btn sess-btn" href="${esc(sess.url)}" target="_blank" rel="noopener">📋 ${esc(sess.title)} ↗</a>` : ''}
+          <a class="btn" href="/library.html" style="text-decoration:none">多端会话与产物 ↗</a>
+          <button class="btn" id="tdRefresh" ${busy ? 'disabled' : ''}>${busy ? '⏳ ' + esc(busy) : '↻ 刷新会话'}</button>
+          ${sess && sess.url && sess.url.trim() ? `<a class="btn sess-btn" href="${esc(sess.url)}" target="_blank" rel="noopener">📋 ${esc(sess.title)} ↗</a>` : ''}
           ${(() => { const b = binding('monitor'); return b && b.daily ? `<a class="btn ghost" href="${esc(b.url)}" target="_blank" rel="noopener" style="text-decoration:none">💬 ${esc(b.title)} ↗</a>` : ''; })()}
         </div>
-        <div class="section-t">今天 <small class="muted">开着 ${(B.today_open || []).length} · 勾掉 ${(B.done_today || []).length}</small></div>
+        
+        <div class="section-t">我的待办 <small class="muted">开着 ${(B.today_open || []).length} · 勾掉 ${(B.done_today || []).length}</small></div>
         <div class="td-list">${(B.today_open || []).map((t) => row(t, 'open')).join('') || '<p class="muted">今天还没有开着的事。</p>'}</div>
         <div class="addrow">
-          <input id="newTask" placeholder="加一件要做的事，回车（写进账本，换设备也在）" maxlength="160">
+          <input id="newTask" aria-label="添加待办" placeholder="加一件要做的事，回车保存到本机账本" maxlength="160">
           <button class="btn" id="addTask">加上</button>
         </div>
         ${(B.done_today || []).length ? `<div class="section-t td-fold" data-fold="done">${openDone ? '▾' : '▸'} 今天勾掉的 <small class="muted">${B.done_today.length} 条 · 点 ✓ 可以重新打开</small></div>
         ${openDone ? `<div class="td-list">${B.done_today.map((t) => row(t, 'done')).join('')}</div>` : ''}` : ''}
-        <div class="section-t td-fold" data-fold="carry">${openCarry ? '▾' : '▸'} 往日没收口 <small class="muted">${(B.carry || []).length} 条 · 不会自动变成今天的待办</small></div>
+        <div class="section-t td-fold" data-fold="carry">${openCarry ? '▾' : '▸'} 往日没收口 <small class="muted">${(B.carry || []).length} 条 · 从 2026-11-11 起，未勾选持续保留</small></div>
         ${openCarry ? Object.keys(days).sort().reverse().map((d) => `
-          <div class="td-space">${esc(d)} <small>${days[d].length}</small> <button class="btn ghost td-dayall" data-day="${esc(d)}">这天的我都看过了 · 全部勾掉</button></div>
+          <div class="td-space">${esc(d)} <small>${days[d].length}</small> <button class="btn ghost td-dayall" data-day="${esc(d)}">确认这天全部完成</button></div>
           <div class="td-list">${days[d].map((t) => row(t, 'open')).join('')}</div>`).join('') || '<p class="muted">没有往日欠着的事。</p>' : ''}
         <div class="section-t td-fold" data-fold="drop">${openDrop ? '▾' : '▸'} 放下的 <small class="muted">${c.dropped || 0} 条 · 正文都还在账本里</small></div>
         ${openDrop ? (B.dropped || []).map((t) => `<div class="nb-arcrow" data-id="${esc(t.id)}"><s>${esc(t.kind === 'session' ? t.session + '：' + t.text : t.text)}</s><small>${esc(t.day)}${t.reason ? ' · ' + esc(t.reason) : ''}</small><button class="btn ghost" data-act="reopen">↺ 重开</button></div>`).join('') || '<p class="muted">还没有放下过。</p>' : ''}
-        <div class="stat-row td-stats">
-          <div class="stat-box" style="--c:#7c4dff"><b>${S.running || 0}</b><small>进行中</small></div>
-          <div class="stat-box" style="--c:#14b8a6"><b>${S.replied || 0}</b><small>已回复</small></div>
-          <div class="stat-box" style="--c:#ffb020"><b>${(B.done_today || []).length}</b><small>今天勾掉</small></div>
-          <div class="stat-box" style="--c:#e5484d"><b>${c.carry || 0}</b><small>往日没收口</small></div>
-        </div>`;
+        `;
     }
 
     const wire = () => {
-      const paint = () => { panelBody.innerHTML = render() + sessionFooter('monitor'); wire(); };
+      const paint = () => {
+        if (!active || modal.hidden || !$('#tdRefresh')) return;
+        const input = $('#newTask'), draft = input ? input.value : '';
+        const focused = document.activeElement;
+        const focusId = focused && focused.id, fold = focused && focused.dataset.fold;
+        panelBody.innerHTML = render() + sessionFooter('monitor'); wire();
+        if ($('#newTask')) $('#newTask').value = draft;
+        const restore = focusId ? document.getElementById(focusId) : fold ? panelBody.querySelector('[data-fold="' + fold + '"]') : null;
+        if (restore) restore.focus({ preventScroll: true });
+      };
+      panelBody.querySelectorAll('[data-open-session]').forEach(button=>button.addEventListener('click',async()=>{
+        if(button.dataset.openSession.startsWith('workbuddy:')){location.href='/library.html?session='+encodeURIComponent(button.dataset.openSession);return;}
+        button.disabled=true;
+        try {
+          const response=await fetch('/api/index/open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'session',id:button.dataset.openSession})});
+          const result=await response.json();
+          if(!response.ok||result.ok===false) throw Error(result.error||'未能打开原会话');
+          if(result.url){location.href=result.url;return;}
+          toast(result.opened_in?'已在 '+result.opened_in+' 打开':'已交给原应用打开');
+        } catch(e) { toast('打开失败：'+e.message+'；仍可查看本地索引'); }
+        finally { button.disabled=false; }
+      }));
       const act = async (input, msg) => {
-        try { const j = await todosAction(input); status = 'live'; setB(j); if (msg) toast(msg); }
-        catch (e) { status = e.offline ? 'offline' : 'error'; toast(e.offline ? e.message : '没写进去：' + e.message); }
-        paint();
+        if (writing) return;
+        writing = true;
+        panelBody.querySelectorAll('[data-act], #addTask, .td-dayall').forEach(el => el.disabled = true);
+        try {
+          const j = await todosAction(input); status = 'live'; setB(j);
+          if (input.op === 'add' && $('#newTask')) $('#newTask').value = '';
+          if (msg) toast(msg);
+        } catch (e) { status = e.offline ? 'offline' : 'error'; toast(e.offline ? e.message : '没写进去：' + e.message); }
+        finally { writing = false; paint(); }
       };
-      // 乐观更新：先在面板上挪过去，再写账本（失败会按账本重画）
-      const move = (id, to) => {
-        const all = [...(B.today_open || []), ...(B.carry || []), ...(B.done_today || []), ...(B.dropped || [])];
-        const t = all.find((x) => x.id === id); if (!t) return;
-        const rm = (k) => (B[k] || []).filter((x) => x.id !== id);
-        B = { ...B, today_open: rm('today_open'), carry: rm('carry'), done_today: rm('done_today'), dropped: rm('dropped') };
-        if (to === 'done') B.done_today = [{ ...t, state: 'done' }, ...B.done_today];
-        if (to === 'drop') B.dropped = [{ ...t, state: 'dropped' }, ...B.dropped];
-        if (to === 'reopen') (t.day < B.today ? B.carry : B.today_open).unshift({ ...t, state: 'open' });
-        paint();
-      };
+      // 只有账本确认成功才改变任务状态，失败保留原状态。
       panelBody.querySelectorAll('[data-act]').forEach((el) => el.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = el.closest('[data-id]').dataset.id, a = el.dataset.act;
-        move(id, a); window.playSfx(a === 'done' ? 'coin' : 'click');
+        if (writing) return;
+        window.playSfx('click');
         act(a === 'drop' ? { op: 'drop', id, reason: '在电脑面板放下' } : { op: a, id }, { done: '✓ 勾掉了', drop: '放下了（在「放下的」里能重开）', reopen: '↺ 重新打开' }[a]);
       }));
-      panelBody.querySelectorAll('.td-fold').forEach((el) => el.addEventListener('click', () => {
+      panelBody.querySelectorAll('.td-fold').forEach((el) => {
+        el.setAttribute('role', 'button'); el.tabIndex = 0;
+        el.setAttribute('aria-expanded', String(el.dataset.fold === 'carry' ? openCarry : el.dataset.fold === 'done' ? openDone : openDrop));
+        el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); } });
+        el.addEventListener('click', () => {
         const f = el.dataset.fold;
         if (f === 'carry') openCarry = !openCarry; else if (f === 'done') openDone = !openDone; else openDrop = !openDrop;
         paint();
-      }));
+      }); });
       panelBody.querySelectorAll('.td-dayall').forEach((el) => el.addEventListener('click', async (e) => {
         e.stopPropagation();
         const ids = (B.carry || []).filter((t) => t.day === el.dataset.day).map((t) => t.id);
-        if (!ids.length || !confirm(`把 ${el.dataset.day} 的 ${ids.length} 条都勾掉？（你确认都看过了）`)) return;
-        ids.forEach((id) => move(id, 'done'));
-        for (const id of ids) { try { setB(await todosAction({ op: 'done', id })); } catch (er) { toast('没写完：' + er.message); break; } }
-        status = 'live'; paint(); toast(`✓ ${el.dataset.day} 收口了`);
+        if (!ids.length || !confirm(`把 ${el.dataset.day} 的 ${ids.length} 条都勾掉？（你确认全部完成）`)) return;
+        if (writing) return;
+        writing = true;
+        panelBody.querySelectorAll('[data-act], #addTask, .td-dayall').forEach(button => button.disabled = true);
+        let completed = 0, failure = '';
+        for (const id of ids) {
+          try { setB(await todosAction({ op: 'done', id })); completed++; }
+          catch (er) { failure = er.message; break; }
+        }
+        writing = false; status = failure ? 'error' : 'live'; paint();
+        toast(failure ? `已保存 ${completed}/${ids.length} 条，其余未完成：${failure}` : `✓ 已勾掉 ${completed} 条`);
       }));
       const add = () => {
         const v = $('#newTask').value.trim(); if (!v) return;
-        B = { ...B, today_open: [{ id: 'pending-' + Date.now(), kind: 'manual', text: v, day: B.today }, ...(B.today_open || [])] };
-        paint(); window.playSfx('coin');
+        if (writing) return;
         act({ op: 'add', text: v }, '加进账本了');
       };
       $('#addTask').addEventListener('click', add);
       $('#newTask').addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && !e.isComposing) add(); });
       $('#tdRefresh').addEventListener('click', async () => {
         if (busy) return;
-        busy = '正在汇总所有空间…'; paint();
+        busy = '正在读取新增与变化…'; paint();
         try {
-          const j = await todosAction({ op: 'refresh' }, (s) => { const b = $('#tdRefresh'); if (b) b.textContent = `⏳ 汇总中… ${s}s`; });
-          status = 'live'; setB(j);
-          toast(j.added || j.touched ? `↻ 新收进 ${j.added} 条，更新 ${j.touched} 条` : '↻ 已是最新');
-        } catch (e) { status = e.offline ? 'offline' : 'error'; toast('刷新没成功：' + e.message); }
-        busy = ''; paint();
+          const response=await fetch('/api/index/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+          if(!response.ok) throw Error('无法启动同步');
+          let job=await response.json();
+          while(job.running) {
+            await new Promise(resolve=>setTimeout(resolve,2000));
+            T=await fetch('/api/index/today').then(r=>r.json()); setB(await todosAction({op:'list'}));
+            const state=await fetch('/api/index/status').then(r=>r.json());
+            job=state.job; busy=job.message||'正在同步';
+            if(!active||modal.hidden||!$('#tdRefresh')) return;
+            paint();
+          }
+          if(job.error) throw Error(job.error);
+          T=await fetch('/api/index/today').then(r=>r.json()); setB(await todosAction({op:'list'}));
+          buildPoster();
+          toast('今天的多端会话已刷新');
+        } catch (e) { toast('刷新未完成：'+e.message); }
+        busy = ''; if(active&&!modal.hidden&&$('#tdRefresh')) paint();
       });
     };
 
     // 打开就拉最新账本；第一次顺手把浏览器里旧的「我自己加的」搬进账本
     const pull = async () => {
       try {
+        const response=await fetch('/api/index/today');
+        if(response.ok) T=await response.json();
         const old = store.get(K.todos, null);
         let j;
         if (Array.isArray(old) && old.length && !store.get(K_TODOS_MIGRATED, false)) {
@@ -561,7 +657,13 @@
         } else j = await todosAction({ op: 'list' });
         status = 'live'; setB(j);
       } catch (e) { status = e.offline ? 'offline' : 'error'; }
-      if (!modal.hidden && $('#tdRefresh')) { panelBody.innerHTML = render() + sessionFooter('monitor'); wireNow(); }
+      if (active && !writing && !modal.hidden && $('#tdRefresh')) {
+        const input = $('#newTask'), draft = input ? input.value : '', focused = document.activeElement;
+        const focusId = focused && focused.id;
+        panelBody.innerHTML = render() + sessionFooter('monitor'); wireNow();
+        $('#newTask').value = draft;
+        if (focusId) { const restore = document.getElementById(focusId); if (restore) restore.focus({ preventScroll: true }); }
+      }
     };
     let wireNow = wire;
     setTimeout(pull, 0);
@@ -824,7 +926,7 @@
     const both = !!(has3d && f.photo);
     const dl = glb
       ? `<div class="fig-dl"><a class="btn ghost" href="${esc(glb)}" download>⤓ 下载 3D 模型 (.glb)</a></div>`
-      : (f.photo ? `<div class="fig-dl"><a class="btn ghost" href="${esc(f.photo)}" download>⤓ 下载立牌 (.webp)</a></div>` : '');
+      : (f.photo ? `<div class="fig-dl"><a class="btn ghost" href="${esc(f.photo)}" download>⤓ 下载立牌原图</a></div>` : '');
     const acts = (f.actions || []).filter((g) => g.items && g.items.length);
     const nActs = acts.reduce((n, g) => n + g.items.length, 0);
     const tabs = (both || nActs) ? `<div class="tabs" id="figTabs">
@@ -979,10 +1081,11 @@
         <h2>${esc(p.title || p.cap)}</h2>
         <img class="shot-big pol-big" src="${esc(p.file)}" alt="">
         ${p.note ? `<p class="muted">${esc(p.note)}</p>` : ''}
+        ${!p.url && !p.goto ? '<p class="empty-state" role="status">这个位置还没有设置入口。可以先到书架查看已配置的链接。</p><button class="btn" id="polBrowse">查看已有链接 →</button>' : ''}
         ${p.goto ? `<button class="btn" id="polGo">${esc(p.gotoLabel || '去看看')}</button>` : ''}
         ${p.url ? `<div class="addrow"><a class="btn" style="text-decoration:none" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.urlLabel || '打开 ↗')}</a>
           ${(p.links || []).map((l) => `<a class="btn ghost" style="text-decoration:none" href="${esc(l.u)}" target="_blank" rel="noopener">${esc(l.t)} ↗</a>`).join('')}</div>` : ''}`,
-      wire: () => { const b = $('#polGo'); if (b) b.addEventListener('click', () => openObject(p.goto)); },
+      wire: () => { const browse = $('#polBrowse'); if (browse) browse.addEventListener('click', () => openObject('book')); const b = $('#polGo'); if (b) b.addEventListener('click', () => openObject(p.goto)); },
     };
   }
   function openPin(el) {
@@ -1100,33 +1203,26 @@
 
   /* ---------- 面板：海报 · 作品展台 —— 全部图片产物（新 → 旧），另附 Works 橱窗 ---------- */
   function panelPoster() {
-    const S = D.showcase, G = window.DESK_GALLERY || [];
+    const S = D.showcase, G = [...(window.DESK_GALLERY || [])];
     const PAGE = 48;
     const fmt = (iso) => { if (!iso) return ''; const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
     const html = `
       <span class="kicker">POSTER · ${esc(S.title)}</span>
       <h2>${esc(S.title)}</h2>
-      <p class="muted">My Daily 里的全部图片产物，最新的在最前面（海报上贴的就是第一张）。</p>
+      <p class="muted">多端索引里的图片，点缩略图看大图。这里展示最近 100 张。</p>
+      <p><a class="btn" href="/library.html?view=images">查看全部图片与搜索 ↗</a></p>
       <div class="tabs">
         <button class="tabbtn on" data-ptab="all">🖼 全部图片 · ${G.length}</button>
-        <button class="tabbtn" data-ptab="works">🏛 Works 橱窗</button>
+        <button class="tabbtn" data-ptab="works">应用与页面</button>
       </div>
       <div id="posterBody"></div>`;
 
-    const worksHTML = () => `
-      <div class="stat-row">${S.stats.map((x) => `<div class="stat-box" style="--c:${esc(x.color)}"><b>${x.n}</b><small>${esc(x.label)}</small></div>`).join('')}</div>
-      <div class="showgrid">
-        ${S.works.map((w) => `
-          <a class="showcard" href="${esc(S.link(w.slug))}" target="_blank" rel="noopener" style="--c:${esc(w.color)}">
-            <span class="sc-ico">${esc(w.icon)}</span><span class="sc-t">${esc(w.title)}</span><span class="sc-tag">${esc(w.tag)}</span>
-          </a>`).join('')}
-      </div>
-      <p class="muted" style="margin-top:12px">全部是本机索引链接：文件夹、文件、网页、App，点开就是真实位置。</p>`;
+
 
     const wire = () => {
       const body = $('#posterBody');
       let shown = 0, tab = 'all';
-      const tile = (g, i) => `<figure class="gshot" data-i="${i}"><img src="${esc(g.url)}" alt="${esc(g.title)}" loading="lazy" decoding="async"><figcaption>${esc(fmt(g.created))}</figcaption></figure>`;
+      const tile = (g, i) => `<figure class="gshot" data-i="${i}" role="button" tabindex="0" aria-label="查看图片：${esc(g.title)}"><img src="${esc(g.url)}" alt="${esc(g.title)}" loading="lazy" decoding="async"><figcaption>${esc(fmt(g.created))}</figcaption></figure>`;
       const more = () => {
         const grid = $('#gGrid'); if (!grid) return;
         grid.insertAdjacentHTML('beforeend', G.slice(shown, shown + PAGE).map((g, k) => tile(g, shown + k)).join(''));
@@ -1158,17 +1254,28 @@
               <a class="btn" href="${esc(g.url)}" target="_blank" rel="noopener" style="text-decoration:none">打开原图 ↗</a>
             </div>
           </div>`;
-        $('#gBack').addEventListener('click', paintAll);
+        $('#gBack').addEventListener('click', () => { paintAll(); const tile = body.querySelector('.gshot'); if (tile) tile.focus(); });
         $('#gPrev').addEventListener('click', () => view(i - 1));
         $('#gNext').addEventListener('click', () => view(i + 1));
       };
-      body.addEventListener('click', (e) => { const f = e.target.closest('.gshot'); if (f) view(+f.dataset.i); });
+      body.addEventListener('click', (e) => { const f = e.target.closest('.gshot'); if (f) { view(+f.dataset.i); $('#gBack').focus(); } });
+      body.addEventListener('keydown', e => { const f = e.target.closest('.gshot'); if (f && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); f.click(); } });
       $$('.tabbtn[data-ptab]').forEach((b) => b.addEventListener('click', () => {
         tab = b.dataset.ptab;
         $$('.tabbtn[data-ptab]').forEach((x) => x.classList.toggle('on', x === b));
-        if (tab === 'all') paintAll(); else body.innerHTML = worksHTML();
+        if (tab === 'all') paintAll(); else {
+          body.innerHTML = '<p><a href="/works.html">独立打开应用与页面 ↗</a></p><div id="worksMount"></div>';
+          window.DeskWorks.mount($('#worksMount'));
+        }
       }));
       paintAll();
+      fetch('/api/index/artifacts?images=1&limit=100').then(r=>r.json()).then(data=>{
+        if(!body.isConnected||!data.items) return;
+        G.splice(0,G.length,...data.items.map(a=>({title:a.title,url:'/api/index/image?id='+encodeURIComponent(a.id),created:a.updated,src:a.source})));
+        const button=panelBody.querySelector('[data-ptab="all"]');
+        if(button) button.textContent='🖼 图片 · '+data.total;
+        if(tab==='all') paintAll();
+      }).catch(()=>toast('图片索引暂时不可用'));
     };
     return { html, wire, wide: true };
   }
@@ -1181,7 +1288,7 @@
     const fixed = p.stats.filter((st) => !st.live);
     const html = `
       <span class="kicker">PC TOWER · ${esc(p.name)}</span>
-      <h2>在跑什么</h2>
+      <h2>桌面状态</h2>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
         ${p.parts.map((x) => `<span class="site">${esc(x)}</span>`).join('')}
       </div>
@@ -1192,9 +1299,9 @@
           <div class="vibe-foot"><span class="vibe-text"></span>${st.live === 'tea' ? '<button class="btn ghost vibe-btn" data-act="tea">🍵 续一盏</button>' : ''}${st.live === 'focus' ? '<button class="btn ghost vibe-btn" data-act="focus">🎧 专注模式</button>' : ''}</div>
           <canvas class="vibe-spark" width="640" height="70"></canvas>
         </div>`).join('')}
-      ${live.length ? '<p class="muted vibe-note">曲线是过去 60 分钟，跟着时间和你在桌上做的事走：续茶会把茶温倒回 88°C 再慢慢凉，也会让心情鼓一下；戴耳机专注 +12；番茄钟每半小时一轮；17:30 之后专注往下走。主机风扇转速也跟着专注变。</p>' : ''}
-      ${fixed.map((s) => `<div class="stat"><div class="srow"><b>${esc(s.label)}${s.fixed ? ' <small class="fixed-dot">· 已落盘</small>' : ''}</b><span>${s.value}%</span></div><div class="bar"><i style="width:${s.value}%;background:var(--teal)"></i></div></div>`).join('')}
-      <div class="section-t">现在</div>
+      ${live.length ? '<p class="muted vibe-note">以下为桌面互动模拟，不代表真实健康或系统测量。曲线是过去 60 分钟，跟着时间和你在桌上做的事走：续茶会把茶温倒回 88°C 再慢慢凉，也会让心情鼓一下；戴耳机专注 +12；番茄钟每半小时一轮；17:30 之后专注往下走。主机风扇转速也跟着专注变。</p>' : ''}
+      ${fixed.length ? '<p class="muted">尚未接入系统状态监测；这里不显示存储、索引或同步完成率。</p>' : ''}
+      <div class="section-t">配置说明</div>
       ${p.running.map((r) => `<div class="run">▸ ${esc(r)}</div>`).join('')}`;
     const COLOR = { focus: '#7c4dff', mood: '#ff5fa2', tea: '#14b8a6' };
     const wire = () => {
@@ -1248,7 +1355,7 @@
   /* ---------- 面板：手机 · 微信群聊（多 agent）——实现在 js/wx/（外壳 / 会话模型 / adapter / 角色包），这里只转发 ---------- */
   function panelPhone() {
     if (!window.DESK_WX || !window.DESK_WX.panel) {
-      return { html: '<span class="kicker">PHONE</span><h2>手机没加载出来</h2><p class="muted">js/wx/ 下的文件没有加载成功，刷新一下试试。</p>' };
+      return { html: '<span class="kicker">PHONE · 手机</span><h2>手机功能尚未接入</h2><p class="muted">当前版本暂未提供手机内容，无需反复刷新。会话请从显示器查看。</p>' };
     }
     const p = window.DESK_WX.panel({ toast, sfx: window.playSfx });
     return { html: p.html, wire: () => { p.wire(); panelCleanup.push(p.cleanup); } };
@@ -1387,32 +1494,15 @@
 
   /* ---------- 面板：台历 · 绑定 Space 手账 ---------- */
   function panelCalendar() {
-    const journalUrl = '/INDEX.html';
     const d = new Date();
     const date = `${d.getMonth() + 1} 月 ${d.getDate()} 日 · 周${'日一二三四五六'[d.getDay()]}`;
     return {
-      wide: true,
-      html: `
-        <span class="kicker">CALENDAR · 台历 & 手账</span>
-        <h2>${date} · Space 手账</h2>
-        <p class="muted">已绑定 Space 手账。每个活跃日一张贴纸、心情曲线、本月新作与打卡。</p>
-        <p style="margin: 8px 0 12px;">
-          <a class="btn daily-btn" href="${journalUrl}" target="_blank" rel="noopener">↗ 在新标签页打开独立手账 App</a>
-        </p>
-        <div class="dash-frame" style="height:min(72vh, 680px);">
-          <div class="dash-loading">📖 正在翻开手账...</div>
-          <iframe src="${journalUrl}" allow="clipboard-read; clipboard-write"></iframe>
-        </div>`,
-      wire: () => {
-        const frame = $('.dash-frame iframe');
-        if (frame) {
-          frame.addEventListener('load', () => {
-            frame.classList.add('ready');
-            const ld = $('.dash-loading');
-            if (ld) ld.style.display = 'none';
-          });
-        }
-      }
+      html: `<span class="kicker">CALENDAR · 台历</span>
+        <h2>${date}</h2>
+        <p>手账尚未接入。</p>
+        <p class="muted">这里目前只显示日期。今天的会话与待办，可以从显示器查看。</p>
+        <button class="btn" id="calendarToday">查看今天的会话与待办 →</button>`,
+      wire: () => $('#calendarToday').addEventListener('click', () => openObject('monitor')),
     };
   }
 
@@ -1432,7 +1522,9 @@
     const list = Object.keys(LBL).map((k) => esc(LBL[k].zh)).join(' · ');
     return {
       html: `<span class="kicker">HOW TO UPDATE</span><h2>${esc(u.title)}</h2>
-      ${u.lines.map((l) => `<p>• ${esc(l)}</p>`).join('')}
+      <p>待办与便签通过本地服务写入本机账本，刷新页面仍会保留；目前不代表自动跨设备同步。</p>
+      <p>配色、音效、笔筒随手记和生活打卡保存在当前浏览器，换浏览器不会自动带过去。</p>
+      <p>内容配置优先读取 data/content.local.json，未配置时使用 data/content.json；修改配置后需重新生成页面数据。</p>
       <div class="section-t">可交互清单（${Object.keys(LBL).length} 件）</div>
       <p class="muted">${list}</p>
       <div class="section-t">Session 绑定（js/sessions.js）</div>
@@ -1504,16 +1596,17 @@
     { action: 'theme', t: '切换配色 🎨' }, { action: 'dn', t: '切换白天 / 黑夜' },
     { action: 'lamp', t: '开关台灯 💡' }, { action: 'sound', t: '开关环境音 🎧' },
     { action: 'filter', t: '漫画滤镜 😎' }, { k: 'update', t: '这张桌子怎么更新' },
-    { href: '/INDEX.html', t: '打开索引页 📇' }, { href: 'desk3d.html', t: '旧版 3D 桌面' },
+    { href: '/catalog.html', t: '打开索引页 📇' },
     ...Object.keys((SS && SS.bind) || {}).filter((k) => binding(k)).map((k) => ({ session: k, t: '🔗 ' + ((LBL[k] && LBL[k].zh) || k) + ' → ' + binding(k).title })),
   ];
-  let cmdSel = 0, cmdItems = [];
+  let cmdSel = 0, cmdItems = [], cmdReturnFocus = null;
   function openCmd() {
+    cmdReturnFocus = document.activeElement;
     $('#cmd').hidden = false; $('#cmdInput').value = ''; cmdSel = 0;
     renderCmd(''); $('#cmdInput').focus();
     window.playSfx('open');
   }
-  function closeCmd() { $('#cmd').hidden = true; }
+  function closeCmd() { $('#cmd').hidden = true; if (cmdReturnFocus && cmdReturnFocus.isConnected) cmdReturnFocus.focus({ preventScroll: true }); }
   function renderCmd(q) {
     q = q.toLowerCase();
     cmdItems = CMD_ITEMS.filter((i) => i.t.toLowerCase().includes(q) || (i.k || i.session || '').includes(q));
@@ -1544,7 +1637,7 @@
     if (e.key === 'ArrowDown') { e.preventDefault(); cmdSel = Math.min(cmdItems.length - 1, cmdSel + 1); renderCmd($('#cmdInput').value); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); cmdSel = Math.max(0, cmdSel - 1); renderCmd($('#cmdInput').value); }
     else if (e.key === 'Enter') { e.preventDefault(); runCmd(); }
-    else if (e.key === 'Escape') closeCmd();
+    else if (e.key === 'Escape') { e.stopPropagation(); closeCmd(); }
   });
 
   /* ---------------- 工具按钮 ---------------- */

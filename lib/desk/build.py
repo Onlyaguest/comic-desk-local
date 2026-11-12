@@ -179,7 +179,7 @@ th{{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b6257}}
 <div class="card"><h2>读法</h2><p>今天：<code>data/generated/today.json</code> · 便签：<code>data/notes.jsonl</code> · 待办：<code>data/todos.jsonl</code> · 图片：<code>data/generated/gallery.json</code></p>
 <p>命令行：<code>desk sync</code> · <code>desk build</code> · <code>desk serve</code> · <code>desk doctor</code> · <code>desk index</code></p></div>
 </div></body></html>"""
-    (APP / "INDEX.html").write_text(body, encoding="utf-8")
+    (APP / "catalog.html").write_text(body, encoding="utf-8")
     md = ["# 索引 · 我的本地工作台", "", f"生成于 {iso()}。数据在 `data/`，引擎在 `app/`。", "", "## 物件", "", "| id | 中文 | English |", "|---|---|---|"]
     for k, v in labels.items():
         md.append(f"| `{k}` | {v.get('zh','')} | {v.get('en','')} |")

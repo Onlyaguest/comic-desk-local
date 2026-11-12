@@ -14,8 +14,10 @@ def _seed_if_missing() -> None:
     if not (DATA / "content.json").exists():
         seed = ROOT / "tools" / "make_seed.py"
         if seed.exists():
-            subprocess.run([sys.executable, str(seed)], cwd=str(ROOT), check=False)
+            subprocess.run([sys.executable, str(seed)], cwd=str(ROOT), check=True)
 
+    from .demo import seed
+    seed()
 
 def cmd_install(args) -> int:
     _seed_if_missing()
@@ -81,21 +83,23 @@ def cmd_uninstall(args) -> int:
 
 def cmd_serve(args) -> int:
     _seed_if_missing()
-    if not (APP / "js" / "data.js").exists():
-        builder.build()
+    builder.build()
     server.serve(port=args.port, open_browser=not args.no_open, verbose=args.verbose)
     return 0
 
 
 def cmd_sync(args) -> int:
     cfg = load_json(DATA / "config.json", {}) or {}
-    r = adapters.sync(cfg)
+    from . import indexdb, indexapi
+    r = indexdb.refresh(lambda msg: print(msg, file=sys.stderr), deep=getattr(args, "deep", False))
+    indexapi.write_today()
     b = builder.build()
     print(json.dumps({**r, **b}, ensure_ascii=False, indent=2))
     return 0
 
 
 def cmd_build(args) -> int:
+    _seed_if_missing()
     print(json.dumps(builder.build(), ensure_ascii=False, indent=2))
     return 0
 
@@ -207,6 +211,7 @@ def main(argv=None) -> int:
     p.add_argument("--verbose", action="store_true")
     p.set_defaults(fn=cmd_serve)
     p = sub.add_parser("sync", help="扫描本地 agent 会话与图片，再 build")
+    p.add_argument("--deep", action="store_true", help="补齐全部云端会话正文与文件；可中断后增量续接")
     p.set_defaults(fn=cmd_sync)
     p = sub.add_parser("build", help="把 data/ 编译成页面快照")
     p.set_defaults(fn=cmd_build)

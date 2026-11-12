@@ -1176,7 +1176,10 @@ body.capture-only .obj:not(.cap-target){visibility:hidden}
 
 /* ---------- 电脑面板 · 待办账本 ---------- */
 .task.td{align-items:center}
-.task.td .box{cursor:pointer}
+.task.td .box{cursor:pointer;padding:0;font:inherit;color:inherit}
+#modal :is(button,a,input,textarea,select,[tabindex]):focus-visible,#cmd input:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
+#modal button:disabled{opacity:.55;cursor:wait}
+.empty-state{padding:16px;border:2px dashed var(--ink);border-radius:12px;background:var(--paper,#fff8e7)}
 .td-drop{flex:0 0 auto;border:2px solid var(--ink);background:#fff;border-radius:8px;font:inherit;font-size:11px;padding:1px 7px;cursor:pointer;opacity:.45}
 .task.td:hover .td-drop{opacity:1}
 .td-drop:hover{background:var(--red);color:#fff}

@@ -1,0 +1,16 @@
+name: Verify distributable desk
+on: [push, pull_request]
+jobs:
+  check:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: bash verify.sh
+      - run: python3 tools/audit_release.py
+      - run: python3 tools/smoke_release.py

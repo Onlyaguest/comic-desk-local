@@ -2,7 +2,7 @@
  *  投影仪 · 黑板主题（deck.theme === 'chalk'）
  *  一页 = 一块黑板：木框 + 石板底 + 彩色粉笔字 + 角落涂鸦 + 粉笔槽。
  *  素材改自 chalkboard-bulletin（No.98 黑板报，作者 ATou / kid space）：
- *    assets/projector/chalk/{slate,doodles,strips,tools}.webp
+ *    assets/projector/chalk.svg/{slate,doodles,strips,tools}.webp
  *  大屏开讲时一块块「用粉笔写出来」；幕布上的小画面静止。
  *  页面格式见 tools/guide-deck.py。
  * ===================================================================== */
@@ -20,7 +20,7 @@
   const SHEET = { doodles: [1934, 400], strips: [1183, 499], tools: [1639, 122] };
   const STRIP = { ribbon: [4, 4, 1172, 113], lace: [4, 121, 1177, 144], vine: [4, 269, 1173, 106], bunting: [4, 379, 1168, 118] };
   const TOOL = { eraser: [4, 4, 244, 102], white: [252, 4, 226, 42], pink: [482, 4, 224, 42], yellow: [710, 4, 226, 42], blue: [940, 4, 227, 42], green: [1171, 4, 226, 42], stub: [1401, 4, 116, 42] };
-  const BASE = 'assets/projector/chalk/';
+  const BASE = 'assets/projector/chalk.svg/';
   function sprite(sheet, f, w, cls, style) {
     const [x, y, fw, fh] = f, [W, H] = SHEET[sheet], k = w / fw;
     return `<i class="${cls}" style="width:${w}px;height:${Math.round(fh * k)}px;background:url(${BASE}${sheet}.webp) ${-x * k}px ${-y * k}px/${W * k}px ${H * k}px no-repeat;${style || ''}"></i>`;
@@ -29,9 +29,6 @@
   let fontsAsked = false;
   function ensureFonts() {
     if (fontsAsked) return; fontsAsked = true;
-    ['zcool-kuaile@5.2.5/400.css', 'caveat@5.2.5/latin-700.css'].forEach((f) => {
-      const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://cdn.jsdelivr.net/npm/@fontsource/' + f; document.head.appendChild(l);
-    });
     // 粉笔边缘：轻微抖动 + 颗粒（一次性挂在页面里）
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('width', '0'); svg.setAttribute('height', '0'); svg.style.position = 'absolute';

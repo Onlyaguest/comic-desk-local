@@ -94,11 +94,10 @@ def digest(payload: dict) -> dict:
 
 
 def refresh(payload: dict) -> dict:
-    cfg = load_json(DATA / "config.json", {}) or {}
-    r = adapters.sync(cfg)
-    builder.build()
+    from . import indexapi
+    job = indexapi.start_job()
     j = load_json(GEN / "today.json", {}) or {}
-    return {"ok": True, **r, "today": j}
+    return {"ok": True, "job": job, "today": j}
 
 
 def note(payload: dict) -> dict:
@@ -107,9 +106,8 @@ def note(payload: dict) -> dict:
 
 def todo(payload: dict) -> dict:
     if payload.get("op") == "refresh":
-        cfg = load_json(DATA / "config.json", {}) or {}
-        adapters.sync(cfg)
-        builder.build()
+        from . import indexapi
+        indexapi.write_today()
         tj = load_json(GEN / "today.json", {}) or {}
         existing = {x.get("id"): x for x in Todos()._items().values()}
         new, touched = [], 0

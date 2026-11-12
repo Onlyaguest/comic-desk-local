@@ -103,7 +103,8 @@ def _roots(config: dict) -> list[Path]:
     for r in config.get("transcriptRoots") or []:
         roots.append(expand(r))
     home = Path.home()
-    roots += [home / ".claude" / "projects", home / ".codex" / "sessions"]
+    if not config.get("transcriptRoots"):
+        roots += [home / ".claude" / "projects", home / ".codex" / "sessions"]
     seen, out = set(), []
     for r in roots:
         if r.exists() and str(r) not in seen:
@@ -223,6 +224,8 @@ def sync(config: dict | None = None) -> dict:
 
 
 def doctor() -> dict:
+    from .indexdb import config
+    demo = config().get("demo", True)
     home = Path.home()
     agents = {}
     for name, cmd, root in [
@@ -230,7 +233,7 @@ def doctor() -> dict:
         ("codex", "codex", home / ".codex" / "sessions"),
     ]:
         import shutil
-        agents[name] = {"binary": shutil.which(cmd), "transcripts": root.exists() and sum(1 for _ in root.rglob("*.jsonl")) or 0}
+        agents[name] = {"binary": shutil.which(cmd), "transcripts": not demo and root.exists() and sum(1 for _ in root.rglob("*.jsonl")) or 0}
     return {
         "python": os.sys.version.split()[0],
         "root": str(ROOT),
