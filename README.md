@@ -67,7 +67,7 @@ python3 tools/import_files.py /完整路径/报告.html /完整路径/海报-fin
 
 `data/index.sqlite3` 是可重建索引；`data/todos.jsonl` / `notes.jsonl` 是只追加行为账本；`data/works-state.json` 保存展台整理；`app/js/` 中部分文件是启动时生成的快照。**以上均排除 Git；更新前备份自己的 data/，不要覆盖账本。** 浏览器清缓存不会删勾选记录。
 
-服务只绑定回环地址，写接口拒绝跨源。HTML 作品可执行自己的 JavaScript，仅打开你信任的文件。没有遥测。沿用原仓库的通用桌面装饰，样例作品使用本仓库生成的 SVG；不包含私人照片、音频、3D 模型。本仓库已公开可见，尚未授予整体开源许可证；第三方组件遵循随附许可证。
+服务只绑定回环地址，写接口拒绝跨源。HTML 作品可执行自己的 JavaScript，仅打开你信任的文件。没有遥测。沿用原仓库的通用桌面装饰，样例作品使用本仓库生成的 SVG；不包含私人照片、音频、3D 模型。本项目采用 [MIT 协议](LICENSE)；第三方组件与素材的原有许可证及署名继续保留。
 
 ## 验证和发布
 
@@ -78,3 +78,7 @@ python3 tools/audit_release.py --history
 ```
 
 自检需 Python 3.11+、curl，发布审计需 Git。已在本机 Mac 运行回归与空 HOME 验证。`docs/ci/verify.yml` 提供 macOS / Linux CI 模板；仓库管理员可移入 `.github/workflows/verify.yml` 启用（需要 workflow 权限，本次尚未启用）。`data/` 和生成快照不能靠手动脱敏后上传，应始终不跟踪；只提交源码与虚构 `samples/`。审计覆盖已跟踪和未暂存候选源码；`--history` 另扫描全部本机引用中的历史内容对象，不改写历史。`--deny-file` 可传仓库外的本机隐私标识 JSON 列表，只输出命中的文件和规则名。`--output` 可将逐文件 SHA-256 清单存到仓库外。空 HOME 自检复制同一份候选清单，不依赖先 commit。扫描不能保证识别所有未知隐私格式。历史不重写，不自动修改仓库可见性。
+
+## 协议与贡献
+
+本项目采用 [MIT License](LICENSE)，版权声明为 **2026 Onlyaguest and contributors**。欢迎小伙伴一起贡献：Fork 或创建工作分支，完成验证与隐私扫描后提交 PR，具体步骤见 [贡献指南](CONTRIBUTING.md)。第三方组件沿用随附许可证，例如 PhotoSwipe 的 [MIT 许可证](app/fusion/vendor/PhotoSwipe-LICENSE)。
