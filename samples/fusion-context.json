@@ -1,0 +1,37 @@
+{
+  "source": {
+    "path": "samples/fusion-context.json"
+  },
+  "roles": {
+    "sample-assistant": {
+      "name": "示例助手",
+      "duty": "整理离线演示和核对样例文件",
+      "machine": "演示节点"
+    }
+  },
+  "tasks": {
+    "sample:review": {
+      "assistant": "sample-assistant",
+      "taskRef": "sample:review"
+    }
+  },
+  "replies": {
+    "sample:review": "样例已整理。\n回写：样例说明已更新"
+  },
+  "feedback": [
+    {
+      "taskRef": "sample:review",
+      "sourceRef": "离线演示",
+      "text": "示例反馈：关注继续夹在便签墙上。",
+      "principleId": "示例规则",
+      "evidence": [
+        {
+          "path": "samples/fusion-evidence.md",
+          "contains": [
+            "纸卡关注应留在便签墙"
+          ]
+        }
+      ]
+    }
+  ]
+}

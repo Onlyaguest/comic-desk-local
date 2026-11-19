@@ -173,7 +173,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def serve(port: int = PORT, open_browser: bool = True, verbose: bool = False) -> None:
-    httpd = ThreadingHTTPServer((HOST, port), Handler)
+    from .fusion.handler import Handler as FusionHandler
+    httpd = ThreadingHTTPServer((HOST, port), FusionHandler)
     httpd.verbose = verbose  # type: ignore
     url = f"http://{HOST}:{port}/"
     print(f"桌面已启动：{url}")

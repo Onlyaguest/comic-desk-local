@@ -19,3 +19,21 @@ app/js/notes-board.js
 app/js/today.js
 app/js/todos-board.js
 app/js/uploads.js
+
+# 凭据、运行缓存和本机部署均不进入发布包
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+service-account*.json
+*.db
+*.sqlite
+*.sqlite3
+*.log
+*.plist
+*.local.json
+node_modules/
+.venv/
+startup/
+review/

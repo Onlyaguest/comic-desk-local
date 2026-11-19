@@ -1,0 +1,119 @@
+{
+  "spaceNodeId": "sample-node",
+  "board": {
+    "v": 1,
+    "day": "sample",
+    "cards": [
+      {
+        "id": "sample:item-1",
+        "no": 1,
+        "title": "样例 · 绘制周末海报",
+        "state": "ai",
+        "why": "虚构状态，用于演示纸卡；不表示真实任务执行。",
+        "open": true,
+        "who": "示例助手",
+        "whoId": "sample-assistant",
+        "people": [],
+        "text": "这是离线事项样例。夹到便签墙或翻到背面查看协作证据。",
+        "today": true,
+        "todoNext": "",
+        "project": "sample:project",
+        "sessions": [],
+        "originUrl": "/library.html"
+      },
+      {
+        "id": "sample:item-2",
+        "no": 2,
+        "title": "样例 · 选择报告版式",
+        "state": "wait",
+        "why": "虚构状态，用于演示纸卡；不表示真实任务执行。",
+        "open": true,
+        "who": "示例助手",
+        "whoId": "sample-assistant",
+        "people": [],
+        "text": "这是离线事项样例。夹到便签墙或翻到背面查看协作证据。",
+        "today": true,
+        "todoNext": "",
+        "project": "sample:project",
+        "sessions": [],
+        "originUrl": "/library.html"
+      },
+      {
+        "id": "sample:review",
+        "no": 3,
+        "title": "样例 · 检查番茄钟",
+        "state": "me",
+        "why": "虚构状态，用于演示纸卡；不表示真实任务执行。",
+        "open": true,
+        "who": "示例助手",
+        "whoId": "sample-assistant",
+        "people": [],
+        "text": "这是离线事项样例。夹到便签墙或翻到背面查看协作证据。",
+        "today": true,
+        "todoNext": "",
+        "project": "sample:project",
+        "sessions": [],
+        "originUrl": "/library.html"
+      },
+      {
+        "id": "sample:item-4",
+        "no": 4,
+        "title": "样例 · 补齐缺失图片",
+        "state": "stuck",
+        "why": "虚构状态，用于演示纸卡；不表示真实任务执行。",
+        "open": true,
+        "who": "示例助手",
+        "whoId": "sample-assistant",
+        "people": [],
+        "text": "这是离线事项样例。夹到便签墙或翻到背面查看协作证据。",
+        "today": true,
+        "todoNext": "",
+        "project": "sample:project",
+        "sessions": [],
+        "originUrl": "/library.html"
+      },
+      {
+        "id": "sample:item-5",
+        "no": 5,
+        "title": "样例 · 整理参考资料",
+        "state": "done",
+        "why": "虚构状态，用于演示纸卡；不表示真实任务执行。",
+        "open": true,
+        "who": "示例助手",
+        "whoId": "sample-assistant",
+        "people": [],
+        "text": "这是离线事项样例。夹到便签墙或翻到背面查看协作证据。",
+        "today": true,
+        "todoNext": "",
+        "project": "sample:project",
+        "sessions": [],
+        "originUrl": "/library.html"
+      },
+      {
+        "id": "sample:item-6",
+        "no": 6,
+        "title": "样例 · 等待来源核对",
+        "state": "unknown",
+        "why": "虚构状态，用于演示纸卡；不表示真实任务执行。",
+        "open": true,
+        "who": "示例助手",
+        "whoId": "sample-assistant",
+        "people": [],
+        "text": "这是离线事项样例。夹到便签墙或翻到背面查看协作证据。",
+        "today": true,
+        "todoNext": "",
+        "project": "sample:project",
+        "sessions": [],
+        "originUrl": "/library.html"
+      }
+    ],
+    "projects": [
+      {
+        "id": "sample:project",
+        "name": "离线演示项目",
+        "color": "gray"
+      }
+    ],
+    "today": []
+  }
+}

@@ -226,3 +226,21 @@ GET /api/index/cover 返回 {item: artifact|null, rule: "finished-image-v1"}。�
 默认 `sources.local.json` 中 `demo: true`，首次启动动态生成当天与昨天的虚构记录。`demo:seed:v1` 检查点防止重复初始化，勾选账本不重置。所有真实连接器默认关闭；localEnabled / workbuddyEnabled / cohubEnabled / mirasimEnabled 分别显式启用。
 `sessionStartDay` 首次初始化为昨天，之后固定；个人配置优先。`POST /api/index/demo-message` 仅可更新四条 demo: 会话且只允许 demo 模式。`GET /api/index/status` 返回 demo 标志。样例会话打开返回本机索引 URL；真实会话仍由原适配器处理。
 `tools/import_files.py` 仅导入明确指定路径，使用 manual:<path> 检查点与 mtime_ns/size 增量登记；不调用模型、不做目录扫描。
+
+
+## 融合版 2.2 可分发契约
+
+- 首页 `app/index.html` 叠加 `app/fusion/`；`/original.html` 保留旧入口，共用索引和追加账本。不会覆盖既有勾选或便签历史。
+- `GET /api/desk/board?days=7|30|all&pin=<id>` 合并空间快照与 Codex / Claude / Cohub 索引，返回 `board`、`freshness`、`sessionCounts`、原字段 `usage` 和本次消耗 `metrics`。宿主别名只按显式映射合并，远端节点保留命名空间。
+- `GET /api/desk/card?id=<id>` 按需核对纸卡背面；`GET /api/desk/evidence?receipt=<id>&index=0` 只读项目范围内已登记文本，拒绝越界/符号链接越界，并以 CSP sandbox 展示。
+- `GET /api/desk/images` 接收 q/source/status/offset/limit，默认24张；目录不联网。图片接口 `/api/desk/image?id=&mode=thumb|full` 不取远端；只有显式 `POST /api/desk/image-fetch` 才可在个人模式取单张。`POST /api/desk/image-cover` 只保存封面偏好。未登记 ID 不可读取。
+- `POST /api/desk/sync-index` 尊重 demo/localEnabled/cohubEnabled，样例模式禁止所有外部读取；非样例 Cohub 同步最多5次只读 CLI，互斥与成功30秒冷却。无后台轮询或模型调用。
+
+样例由 `samples/fusion-board.json`、`fusion-context.json`、`fusion-evidence.md` 提供，全部虚构。首次启动增加 `demo:claude`，并保留旧版4条样例与所有账本；检查点 `demo:seed:v2` 防止重复写入。样例时间动态生成，不声称是云端核对时间。
+
+个人模式（demo=false）只读如下显式配置，不扫描 HOME 或聊天：
+
+- `data/fusion/board.local.json`：`{space, spaceNodeId, fetchedAt, checkedAt, board:{v,day,cards:[],projects:[],today:[]}}`。卡状态为 ai/wait/me/stuck/done/unknown；受限卡不保存正文，入口拒绝 javascript 和协议相对地址。
+- `data/fusion/context.local.json`：形状参考样例。`aliases` 为宿主/原生会话ID映射，`tasks[sessionId]` 提供 assistant/taskRef，`roles[assistantId]` 提供 name/duty/machine；`records` 可提供显式宿主生命周期。`feedback[]` 只包含自己明确登记的反馈和项目证据，不自动读取任何聊天。
+- `data/fusion/writeback-receipts.json`：列表，每条含 id/taskRef/statementHash/sourceRef/evidence。statementHash 为移除空白及粗体标记后的独立「回写：」行 SHA-256；仅相同任务、声明和文件证据同时匹配才算 verified。引用和代码块内的回写行不计。历史证据不自动认定本轮交付完成。
+- `data/fusion/observations.json`、`cohub-usage.json`、`sync-ledger.json`、`images/`、`image-prefs.json` 为运行时缓存；不入 Git。原记录观察仅在非样例且 localEnabled 时读取已登记的近期日志，不遍历 HOME；上限256KiB，不保存思考/工具正文。

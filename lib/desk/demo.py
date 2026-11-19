@@ -25,6 +25,13 @@ def seed():
                 c.execute('INSERT OR IGNORE INTO messages VALUES(?,?,?,?,?)',
                     (sid,0,'user',indexdb.ts_epoch(ts),'这是离线样例对话。可以在待办勾选，再模拟新对话验证自动重开。'))
             indexdb.checkpoint(c, 'demo:seed:v1', iso())
+        if not indexdb.checkpoint(c, 'demo:seed:v2'):
+            sid='demo:claude';ts=iso(now()-timedelta(minutes=5))
+            indexdb.upsert(c,sid,'claude','样例 · 核对说明文档',workspace='离线演示项目',updated=ts,native_status='有回复',coverage='样例正文')
+            indexdb.replace_messages(c,sid,[{'role':'user','text':'请核对离线说明。','ts':ts},{'role':'assistant','text':'虚构回复：说明已核对。回写证据仍需独立验证。','ts':ts}],'claude')
+            indexdb.checkpoint(c,'detail:'+sid,indexdb.ts_epoch(ts))
+            for engine in ('codex','claude','cohub'):indexdb.source_status(c,engine,'离线样例','虚构记录，不代表云端核对')
+            indexdb.checkpoint(c, 'demo:seed:v2', iso())
         for name,title,source in [('spring-final.svg','样例 · 春日成品海报','cohub'),('screenshot.svg','样例 · 过程截图','codex')]:
             indexdb.artifact(c,title,str(samples/name),source,'样例正式交付',updated=datetime.fromtimestamp((samples/name).stat().st_mtime,timezone.utc).isoformat(),sid='demo:'+source,kind='image')
         for name in ['report-v1.html','report-v2.html','timer.html']:
@@ -37,7 +44,7 @@ def seed():
 
 def new_message(sid):
     from . import indexdb
-    if not indexdb.config().get('demo', True) or sid not in ('demo:codex','demo:cohub','demo:mirasim','demo:workbuddy'):
+    if not indexdb.config().get('demo', True) or sid not in ('demo:codex','demo:cohub','demo:mirasim','demo:workbuddy','demo:claude'):
         raise ValueError('只可更新离线样例会话')
     with indexdb.connect() as c:
         n=c.execute('SELECT count(*) FROM messages WHERE session_id=?',(sid,)).fetchone()[0]

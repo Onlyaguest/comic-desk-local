@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 PORT="${1:-7799}"
 PY="${PYTHON:-python3}"
+export PYTHONPATH="$PWD/lib${PYTHONPATH:+:$PYTHONPATH}"
 
 echo "== 1/5 编译 =="
 "$PY" -m compileall -q lib
