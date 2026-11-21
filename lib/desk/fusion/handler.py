@@ -2,7 +2,7 @@
 import html, os, urllib.parse
 from desk.paths import ROOT as HERE, APP
 from desk.server import Handler as OriginalHandler, _json
-from . import bridge, session_board, bounded_sync, image_catalog, governance
+from . import bridge, session_board, bounded_sync, image_catalog, governance, agent_status
 
 
 class Handler(OriginalHandler):
@@ -45,6 +45,8 @@ class Handler(OriginalHandler):
             days={'7':7,'30':30,'all':0}.get(raw,7)
             pins=q.get('pin',[])[:12]
             return _json(self,200,session_board.snapshot(days=days,pins=pins))
+        if path == '/api/desk/agent-status':
+            return _json(self, 200, agent_status.summary())
         if path == '/api/desk/space':
             return _json(self, 200, bridge.state())
         if path in ('/', '/index.html'):

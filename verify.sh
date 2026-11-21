@@ -30,5 +30,7 @@ curl -fsS -X POST "http://127.0.0.1:$PORT/api/action" \
   -d '{"action":"notes","input":{"op":"list"}}' \
   | "$PY" -c "import sys,json; d=json.load(sys.stdin); assert d.get('ok') and 'board' in d; print('notes', len(d['board']))"
 
+curl -fsS "http://127.0.0.1:$PORT/api/desk/agent-status" \
+  | "$PY" -c "import sys,json; d=json.load(sys.stdin); assert d.get('ok') and 'counts' in d; print('agent-status', len(d['items']))"
 echo
 echo "PASS"

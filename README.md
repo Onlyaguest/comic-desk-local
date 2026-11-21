@@ -24,6 +24,18 @@
 
 本包不附特定空间的远端看板桥、账户、私人数据、主页注册或本机自启配置。个人模式可显式提供 `data/fusion/board.local.json` 快照；页面只重读该文件，不自动连接远端。使用自己真实来源仍按下方步骤主动配置。
 
+## AI 自己报状态（新，可选）
+
+Claude Code、Codex 干到一半等你点头、做完或出错时，自己往工作台记一行；工作台顶栏出现「等你 2 · 出错 1」这样的小标，点开看是哪个项目，接了本机会话（个人模式）后，四端事项板里对应的会话卡也直接用这个状态，不再靠读日志猜。默认不装，自己跑一条命令：
+
+```sh
+python3 tools/agent_hooks.py show                  # 先看看要加什么，不改文件
+python3 tools/agent_hooks.py install claude codex  # 装上（改前自动备份）
+python3 tools/agent_hooks.py uninstall claude codex
+```
+
+只在开页和点「更新会话索引」时读，不轮询、不弹通知。账本是 `data/fusion/agent-status.jsonl`，不记你的提示词和 AI 的回复。Codex 第一次启动会提示「Hooks need review」，选信任后生效。细节见 [数据契约](docs/DATA-CONTRACT.md)。
+
 ## 三个主要入口
 
 - **显示器 → 会话待办**：今天的会话、往日未收口；标题可打开样例正文。勾选写入本机 JSONL 账本，次日不再显示已完成项；有新对话则重新出现，历史勾选保留。点击底部“模拟一条新对话”可验证 Codex 样例自动重开。样例首次启动按当天 / 昨天生成，重启不重置你的操作。

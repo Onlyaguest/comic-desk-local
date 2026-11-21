@@ -98,3 +98,14 @@
 
 /* 全屏纸卡已有离线标识，收起桌面样例横条，避免遮挡手机操作。 */
 body:has(.fusion-backdrop:not([hidden])) .desk-demo-banner{display:none}
+/* AI 自己报状态：只在有「等你 / 出错」时出现 */
+.agent-status{position:relative}
+.agent-status>button{background:#f2c14e;white-space:nowrap}
+.agent-status>button.has-error{background:#e8735a;color:#fff}
+.agent-status ul{position:absolute;right:0;top:calc(100% + 8px);z-index:60;list-style:none;margin:0;padding:6px;min-width:260px;max-width:min(360px,calc(100vw - 32px));background:#fff5d9;border:2px solid #282015;border-radius:6px;box-shadow:3px 4px 0 #282015;font:13px/1.5 -apple-system,'PingFang SC',sans-serif;color:#282015}
+.agent-status li{padding:6px 8px;border-bottom:1px dashed #c9b88f}
+.agent-status li:last-child{border-bottom:0}
+.agent-status li small{display:block;color:#6b5a3e;font-size:11px;overflow-wrap:anywhere}
+.agent-status li.error b{color:#b8412a}
+.agent-status li.go button{box-shadow:none;border-width:1px;width:100%}
+@media(max-width:850px){.agent-status ul{position:fixed;left:16px;right:16px;top:76px;min-width:0;max-width:none}}

@@ -4,7 +4,7 @@ from contextlib import closing
 from datetime import datetime,timezone,timedelta
 from pathlib import Path
 from urllib.parse import quote
-from . import bridge, observations, governance
+from . import bridge, observations, governance, agent_status
 
 from desk.paths import DATA
 HERE=DATA/'fusion'
@@ -104,6 +104,7 @@ def snapshot(days=7,pins=(),db=DB,cache=CACHE):
                     with closing(connect(native_db)) as n:native_usage={r['id']:r['tokens_used'] for r in n.execute('SELECT id,tokens_used FROM threads')}
                 except sqlite3.Error:pass
             cohub_usage=governance.load(HERE/'cohub-usage.json',{})
+            reported=agent_status.latest()
             for s in sessions:
                 origins=s['_origins'];sid=s['id'];engine=s['engine'];updated=ms(s['updated'])
                 remote_keys=[governance.load_json(o.get('data')).get('spaceNodeId','')+'|'+o['native_id'] for o in origins]
@@ -130,6 +131,8 @@ def snapshot(days=7,pins=(),db=DB,cache=CACHE):
                 runtime=registry.runtime(sid,origins)
                 if runtime:obs={**obs,'hostState':runtime.get('runState'),'hostAt':runtime.get('updatedAt')}
                 state,why=classify(s,last,turn,obs,current,now)
+                rep=reported.get(sid)
+                if rep and int(rep.get('at') or 0)>=updated-60000:state,why=agent_status.lane(rep,now)  # 自报不比会话最后活动旧，就以自报为准
                 usage=copy.deepcopy(obs.get('usage') or {'tokens':None,'note':'无数据'})
                 if not usage.get('tokens') and engine=='codex':
                     count=native_usage.get(sid.split(':',1)[1])
