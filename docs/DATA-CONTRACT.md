@@ -244,3 +244,12 @@ GET /api/index/cover 返回 {item: artifact|null, rule: "finished-image-v1"}。�
 - `data/fusion/context.local.json`：形状参考样例。`aliases` 为宿主/原生会话ID映射，`tasks[sessionId]` 提供 assistant/taskRef，`roles[assistantId]` 提供 name/duty/machine；`records` 可提供显式宿主生命周期。`feedback[]` 只包含自己明确登记的反馈和项目证据，不自动读取任何聊天。
 - `data/fusion/writeback-receipts.json`：列表，每条含 id/taskRef/statementHash/sourceRef/evidence。statementHash 为移除空白及粗体标记后的独立「回写：」行 SHA-256；仅相同任务、声明和文件证据同时匹配才算 verified。引用和代码块内的回写行不计。历史证据不自动认定本轮交付完成。
 - `data/fusion/observations.json`、`cohub-usage.json`、`sync-ledger.json`、`images/`、`image-prefs.json` 为运行时缓存；不入 Git。原记录观察仅在非样例且 localEnabled 时读取已登记的近期日志，不遍历 HOME；上限256KiB，不保存思考/工具正文。
+
+## AI 自己报状态 `data/fusion/agent-status.jsonl`（2026-11-21）
+
+- 由 `tools/agent_status_hook.py` 追加，钩子由用户自己 `python3 tools/agent_hooks.py install claude codex` 装进 `~/.claude/settings.json` / `$CODEX_HOME/hooks.json`；默认不装，`uninstall` 原样去掉，改前备份 `.bak-<时间>`。
+- 每行：`{"at":毫秒,"agent":"claude|codex","session":"原生会话ID","event":"钩子事件","state":"working|waiting|done|error","cwd":"工作目录","detail":"≤80字"}`。不记提示词、回复正文和工具输入；`detail` 只放「等你」时的提示或工具名、「出错」时的错误类型。
+- 事件：Claude Code `UserPromptSubmit`→working，`Notification`（permission_prompt / idle_prompt / elicitation_dialog）和 `PermissionRequest`→waiting，`Stop`→done，`StopFailure`→error；Codex `UserPromptSubmit`→working，`PermissionRequest`、`Interrupt`→waiting，`Stop`→done（Codex 没有出错事件）。
+- 读取：`lib/desk/fusion/agent_status.py` 只读文件尾部 256KiB，按 `agent:session` 取最新一条。四端事项板里自报不早于会话最后活动 60 秒以上时，以自报为准（working→ai，waiting→wait，done→me「本轮做完，事项尚未验收」，error→stuck）；working 超过 30 分钟没有新报告降为 unknown。
+- `GET /api/desk/agent-status` 返回近 48 小时每个会话的最新状态和计数，供顶栏「等你 / 出错」小标用。页面只在开页和点「更新会话索引」后读一次：无轮询、无推送、无通知、无声音。
+- 账本只追加、可整个删除重来；不入 Git（`data/` 已忽略）。
