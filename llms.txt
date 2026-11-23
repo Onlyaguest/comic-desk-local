@@ -1,0 +1,27 @@
+# Comic Desk (comic-desk-local)
+
+> Comic Desk is a local-first desk for one person who works with several AI coding agents. It reads Claude Code and Codex session logs (and, if you turn them on, WorkBuddy, Cohub and Mirasim sessions) into one local SQLite index without changing the originals, turns each day's sessions into a check-off todo list that reopens when a session gets new dialogue, shows which agent is waiting on you or has errored (optional Claude Code / Codex hooks), and puts your images and the small HTML apps and reports you made on the same cartoon desk. It runs as a Python 3.11 standard-library server on 127.0.0.1, ships with an offline sample mode, needs no account, calls no AI model and spends no tokens. MIT licensed.
+
+Comic Desk 是给同时用好几个 AI 助手的人的本机工作台：把 Claude Code、Codex 等的会话收进一份本机索引（不改原文件），变成每天能勾的待办（勾掉后有新对话会自己回来），谁在等你点头、谁出错一眼看到；图片和做出来的小页面也摆在同一张卡通桌面上。默认离线样例，无账号、不调模型、不耗 token，MIT 协议。
+
+What it does not do: it does not compute token cost or usage reports (agentsview does), does not launch or orchestrate agents (omnigent does), and does not give agents long-term memory (obsidian-mind and claudian do). It supports five sources, not dozens. It is tested on macOS; Windows is untested. The project is early (1 GitHub star as of 2026-11-23).
+
+## Docs
+
+- [README (Chinese)](https://github.com/Onlyaguest/comic-desk-local/blob/main/README.md): what it is, how to start on a Mac, sample mode, connecting your own sessions, data and privacy
+- [Comparison with agentsview, omnigent, claudian and obsidian-mind](https://github.com/Onlyaguest/comic-desk-local/blob/main/docs/COMPARISON.md): what each one does, what Comic Desk does and does not do, which to pick
+- [Data contract](https://github.com/Onlyaguest/comic-desk-local/blob/main/docs/DATA-CONTRACT.md): every file and API the desk reads and writes — append-only JSONL ledgers, the SQLite session index, agent-status ledger, sources config
+- [Method: Desk as Index](https://github.com/Onlyaguest/comic-desk-local/blob/main/METHOD.md): the idea behind it — plain-text data, every desk object points to a real place, the clock is left to your local agent
+
+## Quick facts
+
+- Start: install Python 3.11+, download the repo, run `bash start.command` (or `python3 bin/desk serve --port 7788`), open http://127.0.0.1:7777/
+- Sources: Claude Code (`~/.claude/projects`), Codex (`~/.codex/sessions`), WorkBuddy, Cohub, Mirasim — real sources are off by default and switched on in `data/sources.local.json`
+- Agent status hooks: `python3 tools/agent_hooks.py install claude codex` (optional, backs up settings first, `uninstall` removes them)
+- Data: `data/todos.jsonl` and `data/notes.jsonl` are append-only; `data/index.sqlite3` can be deleted and rebuilt; nothing in `data/` is committed
+- Privacy: binds to loopback only, rejects cross-origin writes, no telemetry, no background polling
+
+## Optional
+
+- [Contributing guide](https://github.com/Onlyaguest/comic-desk-local/blob/main/CONTRIBUTING.md)
+- [License (MIT)](https://github.com/Onlyaguest/comic-desk-local/blob/main/LICENSE)

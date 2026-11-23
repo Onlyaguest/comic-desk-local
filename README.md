@@ -2,9 +2,15 @@
 
 ![漫画工作台截图：卡通风桌面，软木板挂便签和武器库，显示器是今日待办，桌上摆着各种小物件](docs/images/desk-screenshot.jpg)
 
+**给同时用好几个 AI 助手的人的本机工作台。** 把 Claude Code、Codex 等几家的会话收进一份本机索引（不改原文件），变成每天能勾的待办——勾掉后又有新对话会自己回来；谁在等你点头、谁出错，顶栏一眼看到；做出来的图片和小页面也摆在同一张桌上。
+
 把每天的待办、AI 会话、图片和小工具摆成一张卡通桌面：软木板挂便签和常用技能（武器库），显示器看今天的事，桌上的小物件点开就是对应的小应用。
 
-一个在本机运行的工作台，把会话待办、图片和小应用收在桌面上。**默认离线样例模式，无账号、无 AI / token 消耗，无需 Codex、Claude、Mirasim 或 Cohub CLI。**
+**默认离线样例模式，无账号、无 AI / token 消耗，无需 Codex、Claude、Mirasim 或 Cohub CLI。**
+
+不做的事：不算 token 花费、不调度助手、不给助手注入记忆。和 agentsview、omnigent、Obsidian 记忆插件各自做什么、怎么选，见 [对比页](docs/COMPARISON.md)。
+
+> **In English:** Comic Desk is a local-first desk for people who work with several AI coding agents. It indexes Claude Code and Codex sessions (plus WorkBuddy, Cohub and Mirasim if you turn them on) into one local SQLite index, turns each day's sessions into a check-off list that reopens when a session gets new dialogue, flags agents that are waiting on you or have errored, and shelves your images and small HTML apps. Offline sample mode, no account, no AI calls, MIT. Not a cost tracker or an orchestrator — see the [comparison](docs/COMPARISON.md) and [llms.txt](llms.txt).
 
 ## 在 Mac 启动
 
