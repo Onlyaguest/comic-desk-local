@@ -1,0 +1,6 @@
+[
+  {"id": "sample-desk-intro", "title": "样例 · 我给自己搭了一张本地桌子", "platform": "公众号", "account": "样例号", "status": "待发", "date": "2026-11-01", "by": "样例 · 模型 A", "pack": "packs/2026-11-01_desk-intro", "body": "packs/2026-11-01_desk-intro/article.md", "qa": "过 · 样例清单 6 条", "note": "虚构样例：外部改过一版，等你看完点采用"},
+  {"id": "sample-desk-intro-v2", "title": "样例 · 散落各处的 AI 作品，我用一张桌子收回来", "platform": "公众号", "account": "样例号", "status": "草稿", "date": "2026-11-01", "by": "样例 · 模型 B", "pack": "packs/2026-11-01_desk-intro-v2", "body": "packs/2026-11-01_desk-intro-v2/article.md", "note": "同一篇的另一版，用来演示并排对比"},
+  {"id": "sample-idea", "title": "样例灵感：写一篇怎么整理浏览器书签", "platform": "", "account": "", "status": "灵感", "date": "2026-11-02", "idea": "（样例）写一篇怎么整理浏览器书签：先删、再分、最后放到桌子上。"},
+  {"id": "sample-tea-timer", "title": "样例 · 泡茶计时器上线了", "platform": "小红书", "account": "样例小号", "status": "已发出", "date": "2026-10-20", "sentAt": "2026-10-20", "pack": "packs/2026-10-20_tea-timer", "body": "packs/2026-10-20_tea-timer/post.md", "url": "https://example.com/sample-post"}
+]
