@@ -109,3 +109,9 @@ body:has(.fusion-backdrop:not([hidden])) .desk-demo-banner{display:none}
 .agent-status li.error b{color:#b8412a}
 .agent-status li.go button{box-shadow:none;border-width:1px;width:100%}
 @media(max-width:850px){.agent-status ul{position:fixed;left:16px;right:16px;top:76px;min-width:0;max-width:none}}
+/* 点星提示：右下角一张小纸条，不挡桌面主体 */
+.star-nudge{position:fixed;right:16px;bottom:72px;z-index:9998;max-width:300px;background:#fff5d9;color:#282015;border:2px solid #282015;border-radius:8px;box-shadow:3px 4px 0 #282015;padding:12px 14px;font:13px/1.55 -apple-system,'PingFang SC',sans-serif;transform:rotate(-1deg)}
+.star-nudge p{margin:0 0 10px}.star-nudge div{display:flex;gap:8px;flex-wrap:wrap}
+.star-nudge a,.star-nudge button{font:700 12px inherit;font-family:inherit;color:#282015;background:#fff;border:2px solid #282015;border-radius:6px;padding:5px 10px;cursor:pointer;text-decoration:none}
+.star-nudge a{background:#f2c14e}.star-nudge button{font-weight:400;border-width:1px}
+@media (max-width:520px){.star-nudge{left:16px;right:16px;max-width:none}}

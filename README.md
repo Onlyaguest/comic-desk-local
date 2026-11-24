@@ -12,6 +12,8 @@
 
 > **In English:** Comic Desk is a local-first desk for people who work with several AI coding agents. It indexes Claude Code and Codex sessions (plus WorkBuddy, Cohub and Mirasim if you turn them on) into one local SQLite index, turns each day's sessions into a check-off list that reopens when a session gets new dialogue, flags agents that are waiting on you or have errored, and shelves your images and small HTML apps. Offline sample mode, no account, no AI calls, MIT. Not a cost tracker or an orchestrator — see the [comparison](docs/COMPARISON.md) and [llms.txt](llms.txt).
 
+觉得有用，欢迎在右上角点个 ⭐ Star——这是别人在 GitHub 上找到它的主要途径。
+
 ## 在 Mac 启动
 
 1. 安装 **Python 3.11 或更高版本**（从 [python.org](https://www.python.org/downloads/) 下载；macOS 不保证自带）。没有 pip 依赖。
@@ -93,7 +95,7 @@ python3 tools/import_files.py /完整路径/报告.html /完整路径/海报-fin
 
 `data/index.sqlite3` 是可重建索引；`data/todos.jsonl` / `notes.jsonl` 是只追加行为账本；`data/works-state.json` 保存展台整理；`app/js/` 中部分文件是启动时生成的快照。**以上均排除 Git；更新前备份自己的 data/，不要覆盖账本。** 浏览器清缓存不会删勾选记录。
 
-服务只绑定回环地址，写接口拒绝跨源。HTML 作品可执行自己的 JavaScript，仅打开你信任的文件。没有遥测。沿用原仓库的通用桌面装饰，样例作品使用本仓库生成的 SVG；不包含私人照片、音频、3D 模型。本项目采用 [MIT 协议](LICENSE)；第三方组件与素材的原有许可证及署名继续保留。
+服务只绑定回环地址，写接口拒绝跨源。HTML 作品可执行自己的 JavaScript，仅打开你信任的文件。没有遥测。用过几次后桌面右下角会出现一张「去 GitHub 点星」小纸条，计数只存在你浏览器的 localStorage，不联网、不上报，点「别再提示」就不再出现。沿用原仓库的通用桌面装饰，样例作品使用本仓库生成的 SVG；不包含私人照片、音频、3D 模型。本项目采用 [MIT 协议](LICENSE)；第三方组件与素材的原有许可证及署名继续保留。
 
 ## 验证和发布
 
@@ -108,3 +110,7 @@ python3 tools/audit_release.py --history
 ## 协议与贡献
 
 本项目采用 [MIT License](LICENSE)，版权声明为 **2026 Onlyaguest and contributors**。欢迎小伙伴一起贡献：Fork 或创建工作分支，完成验证与隐私扫描后提交 PR，具体步骤见 [贡献指南](CONTRIBUTING.md)。第三方组件沿用随附许可证，例如 PhotoSwipe 的 [MIT 许可证](app/fusion/vendor/PhotoSwipe-LICENSE)。
+
+---
+
+如果这张桌子帮你理清了一堆 AI 会话，[给仓库点个 ⭐](https://github.com/Onlyaguest/comic-desk-local) 或把它转给同样在用好几个 AI 助手的朋友，就是最好的支持。踩到坑、想要什么功能，欢迎开 [Issue](https://github.com/Onlyaguest/comic-desk-local/issues)。
