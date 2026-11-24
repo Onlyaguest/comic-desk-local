@@ -253,3 +253,12 @@ GET /api/index/cover 返回 {item: artifact|null, rule: "finished-image-v1"}。�
 - 读取：`lib/desk/fusion/agent_status.py` 只读文件尾部 256KiB，按 `agent:session` 取最新一条。四端事项板里自报不早于会话最后活动 60 秒以上时，以自报为准（working→ai，waiting→wait，done→me「本轮做完，事项尚未验收」，error→stuck）；working 超过 30 分钟没有新报告降为 unknown。
 - `GET /api/desk/agent-status` 返回近 48 小时每个会话的最新状态和计数，供顶栏「等你 / 出错」小标用。页面只在开页和点「更新会话索引」后读一次：无轮询、无推送、无通知、无声音。
 - 账本只追加、可整个删除重来；不入 Git（`data/` 已忽略）。
+
+## 发稿台 `data/publish/`
+
+- `config.local.json`：个人模式配置（登记表路径、稿件根目录、可选命令），不进 Git。没有它就是离线样例。
+- `demo/`：离线样例的可写副本，首次打开时从 `samples/publish/` 复制过来。
+- `changes.jsonl`：每次改状态、挑选、填链接的记录，只追加。
+- 每篇稿的稿件目录里有 `.desk/`：`调整.jsonl`（「我来改」的原话、导出、采用记录，只追加）、`外改底稿.md`、`外改.md`；采用外改版前，旧稿存进 `历史/<时间>_采用外改前/`。
+
+登记表格式见 [docs/PUBLISH.md](PUBLISH.md)。

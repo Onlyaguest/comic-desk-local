@@ -3,6 +3,7 @@ import html, os, urllib.parse
 from desk.paths import ROOT as HERE, APP
 from desk.server import Handler as OriginalHandler, _json
 from . import bridge, session_board, bounded_sync, image_catalog, governance, agent_status
+from desk import publish
 
 
 class Handler(OriginalHandler):
@@ -49,6 +50,10 @@ class Handler(OriginalHandler):
             return _json(self, 200, agent_status.summary())
         if path == '/api/desk/space':
             return _json(self, 200, bridge.state())
+        if path in ('/publish', '/publish/'):
+            return self._static('publish/index.html')
+        if path.startswith('/api/publish/'):
+            return self.publish_get(path)
         if path in ('/', '/index.html'):
             return self._static('index.html')
         if path.startswith('/desk-v2/'):
@@ -58,6 +63,45 @@ class Handler(OriginalHandler):
             return self._static('original.html')
         # v2/data、源码和凭据均不作为静态资源暴露。
         return super().do_GET()
+
+    def publish_get(self, path):
+        q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        one = lambda k: q.get(k, [''])[0]
+        try:
+            if path == '/api/publish/state':
+                return _json(self, 200, publish.state())
+            if path == '/api/publish/post':
+                return _json(self, 200, publish.post(one('id')))
+            if path == '/api/publish/diff':
+                c = publish.compare(publish.find(one('id')))
+                return _json(self, 200, {'ok': bool(c), 'diff': c})
+            if path == '/api/publish/file':
+                p = publish.file_bytes(one('id'), one('p'))
+                data = p.read_bytes()
+                mime = 'image/svg+xml' if p.suffix.lower() == '.svg' else (__import__('mimetypes').guess_type(str(p))[0] or 'application/octet-stream')
+                self.send_response(200); self.send_header('Content-Type', mime); self.send_header('Content-Length', str(len(data)))
+                self.send_header('Cache-Control', 'no-store'); self.send_header('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'; sandbox")
+                self.end_headers(); self.wfile.write(data); return
+        except ValueError as e:
+            return _json(self, 404, {'ok': False, 'error': str(e)})
+        return _json(self, 404, {'ok': False, 'error': '没有这个接口'})
+
+    def publish_post(self):
+        if not self.allowed():
+            return _json(self, 403, {'error': '仅本机访问'})
+        origin = self.headers.get('Origin')
+        if (origin and origin != 'http://' + self.headers.get('Host', '')) or self.headers.get('Sec-Fetch-Site') == 'cross-site':
+            return _json(self, 403, {'error': '仅接受同源操作'})
+        n = int(self.headers.get('Content-Length', '0') or 0)
+        if n > 65536:
+            return _json(self, 400, {'error': '内容太长'})
+        try:
+            body = __import__('json').loads(self.rfile.read(n) or b'{}')
+            if not isinstance(body, dict):
+                raise ValueError('格式不对')
+            return _json(self, 200, publish.action(body))
+        except ValueError as e:
+            return _json(self, 400, {'ok': False, 'error': str(e)})
 
     def version_file(self, rel):
         p = (APP / 'fusion' / rel).resolve()
@@ -74,6 +118,8 @@ class Handler(OriginalHandler):
 
     def do_POST(self):
         route=urllib.parse.urlparse(self.path).path
+        if route == '/api/publish/action':
+            return self.publish_post()
         if route not in ('/api/desk/space/refresh','/api/desk/sync-index','/api/desk/image-fetch','/api/desk/image-cover'):
             return super().do_POST()
         if not self.allowed():

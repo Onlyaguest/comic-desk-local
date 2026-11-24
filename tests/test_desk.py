@@ -128,7 +128,8 @@ class TestSessionBoard(unittest.TestCase):
         from desk import indexdb, store
         with tempfile.TemporaryDirectory() as d:
             db = Path(d) / "index.db"
-            with patch.object(indexdb, "DB", db):
+            # 起始日固定在用例日期：不受本机 data/sources.local.json（首次启动按当天生成）影响
+            with patch.object(indexdb, "DB", db), patch.object(store, "SESSION_START_DAY", "2026-11-11"):
                 with indexdb.connect() as c:
                     for sid, ts in [("old", "2026-11-10T15:59:59Z"),
                                     ("yesterday", "2026-11-10T16:00:00Z"),
