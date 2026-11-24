@@ -8,8 +8,10 @@ What it does not do: it does not compute token cost or usage reports (agentsview
 
 ## Docs
 
+- [Online demo](https://raw.githack.com/Onlyaguest/comic-desk-local/main/demo/index.html): the desk with fictional sample data in your browser, no install, read-only, with a 6-stop guided tour ([how it is built](https://github.com/Onlyaguest/comic-desk-local/blob/main/docs/ONLINE-DEMO.md))
 - [README (Chinese)](https://github.com/Onlyaguest/comic-desk-local/blob/main/README.md): what it is, how to start on a Mac, sample mode, connecting your own sessions, data and privacy
 - [Comparison with agentsview, omnigent, claudian and obsidian-mind](https://github.com/Onlyaguest/comic-desk-local/blob/main/docs/COMPARISON.md): what each one does, what Comic Desk does and does not do, which to pick
+- [Publish desk](https://github.com/Onlyaguest/comic-desk-local/blob/main/docs/PUBLISH.md): a 7-step page for taking a draft from written to published — compare two versions, keep your own edit notes, export for outside edits and adopt them paragraph by paragraph
 - [Data contract](https://github.com/Onlyaguest/comic-desk-local/blob/main/docs/DATA-CONTRACT.md): every file and API the desk reads and writes — append-only JSONL ledgers, the SQLite session index, agent-status ledger, sources config
 - [Method: Desk as Index](https://github.com/Onlyaguest/comic-desk-local/blob/main/METHOD.md): the idea behind it — plain-text data, every desk object points to a real place, the clock is left to your local agent
 
