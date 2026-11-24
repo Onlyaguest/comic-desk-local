@@ -115,3 +115,11 @@ body:has(.fusion-backdrop:not([hidden])) .desk-demo-banner{display:none}
 .star-nudge a,.star-nudge button{font:700 12px inherit;font-family:inherit;color:#282015;background:#fff;border:2px solid #282015;border-radius:6px;padding:5px 10px;cursor:pointer;text-decoration:none}
 .star-nudge a{background:#f2c14e}.star-nudge button{font-weight:400;border-width:1px}
 @media (max-width:520px){.star-nudge{left:16px;right:16px;max-width:none}}
+/* 带我逛一圈：虚线圈住物件 + 一张纸卡说明 */
+.tour-ring{position:fixed;z-index:9990;border:3px dashed #a9422d;border-radius:12px;box-shadow:0 0 0 9999px rgba(20,14,8,.45);pointer-events:none;transition:all .25s ease}
+.tour-card{position:fixed;z-index:9991;background:#fff5d9;color:#282015;border:2px solid #282015;border-radius:8px;box-shadow:4px 5px 0 #282015;padding:14px 16px;font:14px/1.6 -apple-system,'PingFang SC',sans-serif;box-sizing:border-box}
+.tour-card small{color:#a9422d;font-weight:700}.tour-card h3{margin:4px 0 6px;font-size:17px}.tour-card p{margin:0 0 12px}
+.tour-card div{display:flex;gap:8px;flex-wrap:wrap}
+.tour-card button,.tour-card a{font:700 13px -apple-system,'PingFang SC',sans-serif;color:#282015;background:#fff;border:2px solid #282015;border-radius:6px;padding:6px 12px;cursor:pointer;text-decoration:none}
+.tour-card .go,.tour-card a{background:#f2c14e}
+@media (prefers-reduced-motion:reduce){.tour-ring{transition:none}}

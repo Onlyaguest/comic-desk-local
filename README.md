@@ -10,7 +10,9 @@
 
 不做的事：不算 token 花费、不调度助手、不给助手注入记忆。和 agentsview、omnigent、Obsidian 记忆插件各自做什么、怎么选，见 [对比页](docs/COMPARISON.md)。
 
-> **In English:** Comic Desk is a local-first desk for people who work with several AI coding agents. It indexes Claude Code and Codex sessions (plus WorkBuddy, Cohub and Mirasim if you turn them on) into one local SQLite index, turns each day's sessions into a check-off list that reopens when a session gets new dialogue, flags agents that are waiting on you or have errored, and shelves your images and small HTML apps. Offline sample mode, no account, no AI calls, MIT. Not a cost tracker or an orchestrator — see the [comparison](docs/COMPARISON.md) and [llms.txt](llms.txt).
+> **In English:** [Try the online demo](https://raw.githack.com/Onlyaguest/comic-desk-local/main/demo/index.html) (sample data, read-only, no install). Comic Desk is a local-first desk for people who work with several AI coding agents. It indexes Claude Code and Codex sessions (plus WorkBuddy, Cohub and Mirasim if you turn them on) into one local SQLite index, turns each day's sessions into a check-off list that reopens when a session gets new dialogue, flags agents that are waiting on you or have errored, and shelves your images and small HTML apps. Offline sample mode, no account, no AI calls, MIT. Not a cost tracker or an orchestrator — see the [comparison](docs/COMPARISON.md) and [llms.txt](llms.txt).
+
+**不用安装，先在线逛一圈：** [打开在线样例版](https://raw.githack.com/Onlyaguest/comic-desk-local/main/demo/index.html)（虚构数据，只能看；第一次打开会带你逛 6 站。说明见 [docs/ONLINE-DEMO.md](docs/ONLINE-DEMO.md)）
 
 觉得有用，欢迎在右上角点个 ⭐ Star——这是别人在 GitHub 上找到它的主要途径。
 
