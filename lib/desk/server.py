@@ -5,7 +5,7 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 
 from .paths import ROOT, APP, DATA, GEN, load_json
-from . import actions, adapters, indexapi
+from . import __version__, actions, adapters, indexapi
 
 HOST = "127.0.0.1"
 PORT = 7777
@@ -46,7 +46,7 @@ def _safe_media(p: Path) -> bool:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "ComicDeskLocal/1.0"
+    server_version = f"ComicDeskLocal/{__version__}"
 
     def log_message(self, fmt, *args):
         # 静音；要看日志用 desk serve --verbose
